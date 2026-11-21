@@ -1,0 +1,4253 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <title>Mood Heatmap Journal - Daily Mood Tracker, Calendar Heatmap & Analytics</title>
+  
+  <!-- Dynamic Favicon SVG using data URI -->
+  <link rel="icon" id="app-favicon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>🗓️</text></svg>">
+
+  <!-- ================================================================= -->
+  <!-- EMBEDDED CSS: DESIGN TOKENS, RESPONSIVE THEMES & ANIMATIONS       -->
+  <!-- ================================================================= -->
+  <style>
+    /* 1. CSS CUSTOM PROPERTIES (DESIGN TOKENS) */
+    :root {
+      --font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+      --font-mono: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+
+      /* Mood Color Palette */
+      --mood-amazing: #10b981;
+      --mood-amazing-bg: rgba(16, 185, 129, 0.22);
+      --mood-amazing-glow: rgba(16, 185, 129, 0.45);
+
+      --mood-good: #84cc16;
+      --mood-good-bg: rgba(132, 204, 22, 0.22);
+      --mood-good-glow: rgba(132, 204, 22, 0.45);
+
+      --mood-okay: #eab308;
+      --mood-okay-bg: rgba(234, 179, 8, 0.22);
+      --mood-okay-glow: rgba(234, 179, 8, 0.45);
+
+      --mood-bad: #f97316;
+      --mood-bad-bg: rgba(249, 115, 22, 0.22);
+      --mood-bad-glow: rgba(249, 115, 22, 0.45);
+
+      --mood-terrible: #ef4444;
+      --mood-terrible-bg: rgba(239, 68, 68, 0.22);
+      --mood-terrible-glow: rgba(239, 68, 68, 0.45);
+
+      --mood-empty: rgba(255, 255, 255, 0.04);
+      --mood-empty-border: rgba(255, 255, 255, 0.1);
+
+      /* Dark Theme (Default) */
+      --bg-gradient: radial-gradient(circle at 15% 15%, #182238 0%, #0b0f19 55%, #07090e 100%);
+      --bg-surface: rgba(19, 27, 46, 0.72);
+      --bg-surface-elevated: rgba(28, 38, 64, 0.85);
+      --bg-surface-active: rgba(38, 52, 86, 0.95);
+      --bg-input: rgba(13, 19, 33, 0.85);
+      
+      --border-subtle: rgba(255, 255, 255, 0.08);
+      --border-medium: rgba(255, 255, 255, 0.16);
+      --border-glow: rgba(99, 102, 241, 0.5);
+
+      --text-primary: #f8fafc;
+      --text-secondary: #cbd5e1;
+      --text-muted: #94a3b8;
+      --text-faint: #475569;
+
+      --accent-color: #6366f1;
+      --accent-hover: #4f46e5;
+      --accent-glow: rgba(99, 102, 241, 0.35);
+
+      --shadow-sm: 0 2px 6px rgba(0, 0, 0, 0.25);
+      --shadow-md: 0 10px 25px -5px rgba(0, 0, 0, 0.35), 0 8px 10px -6px rgba(0, 0, 0, 0.3);
+      --shadow-lg: 0 20px 35px -5px rgba(0, 0, 0, 0.5);
+
+      --radius-sm: 8px;
+      --radius-md: 14px;
+      --radius-lg: 20px;
+      --radius-full: 9999px;
+
+      --transition-fast: 0.15s cubic-bezier(0.4, 0, 0.2, 1);
+      --transition-normal: 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+      --transition-bounce: 0.4s cubic-bezier(0.34, 1.56, 0.64, 1);
+    }
+
+    /* Light Theme Override */
+    [data-theme="light"] {
+      --bg-gradient: radial-gradient(circle at 10% 10%, #f1f5f9 0%, #e2e8f0 60%, #cbd5e1 100%);
+      --bg-surface: rgba(255, 255, 255, 0.84);
+      --bg-surface-elevated: rgba(255, 255, 255, 0.95);
+      --bg-surface-active: #ffffff;
+      --bg-input: rgba(248, 250, 252, 0.92);
+
+      --border-subtle: rgba(0, 0, 0, 0.08);
+      --border-medium: rgba(0, 0, 0, 0.16);
+      --border-glow: rgba(99, 102, 241, 0.4);
+
+      --text-primary: #0f172a;
+      --text-secondary: #334155;
+      --text-muted: #64748b;
+      --text-faint: #94a3b8;
+
+      --mood-empty: rgba(0, 0, 0, 0.04);
+      --mood-empty-border: rgba(0, 0, 0, 0.08);
+
+      --shadow-sm: 0 2px 5px rgba(0, 0, 0, 0.06);
+      --shadow-md: 0 10px 25px -5px rgba(0, 0, 0, 0.1), 0 8px 10px -6px rgba(0, 0, 0, 0.05);
+      --shadow-lg: 0 20px 30px -8px rgba(0, 0, 0, 0.15);
+    }
+
+    /* 2. GLOBAL RESET & TOUCH-OPTIMIZED DEFAULTS */
+    *, *::before, *::after {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+      -webkit-tap-highlight-color: transparent;
+    }
+
+    html, body {
+      min-height: 100vh;
+      min-height: 100dvh;
+      width: 100%;
+      font-family: var(--font-family);
+      background: var(--bg-gradient);
+      background-attachment: fixed;
+      color: var(--text-primary);
+      line-height: 1.5;
+      -webkit-font-smoothing: antialiased;
+      -moz-osx-font-smoothing: grayscale;
+      overflow-x: hidden; /* Requirement: no horizontal scroll on body */
+      transition: background 0.4s ease, background-color 0.4s ease, color 0.4s ease;
+    }
+
+    /* Ambient background blur spots */
+    body::before, body::after {
+      content: '';
+      position: fixed;
+      width: clamp(240px, 40vw, 480px);
+      height: clamp(240px, 40vw, 480px);
+      border-radius: 50%;
+      filter: blur(clamp(60px, 10vw, 120px));
+      opacity: 0.14;
+      pointer-events: none;
+      z-index: 0;
+      transition: opacity 0.4s ease;
+    }
+    body::before { top: -80px; left: -80px; background: #10b981; }
+    body::after { bottom: -80px; right: -80px; background: #6366f1; }
+
+    /* Interactive controls: touch target min-height 44px, prevent double-tap zoom */
+    button, input, textarea, select, [role="button"],
+    .glass-btn, .nav-arrow-btn, .toggle-pill, .day-cell,
+    .mood-btn-pill, .tag-chip, .action-btn, .timeframe-btn,
+    .modal-mood-btn, .legend-chip, .mini-day-cell, .github-cell {
+      touch-action: manipulation; /* Prevent double-tap zoom delay */
+    }
+
+    button, input, textarea, select {
+      font-family: inherit;
+      color: inherit;
+      border: none;
+      outline: none;
+      background: none;
+    }
+
+    button {
+      cursor: pointer;
+      user-select: none;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+    }
+
+    /* Smooth transitions for theme toggle on all cards */
+    .calendar-card, .sidebar-card, .stat-card, .analytics-card, .stats-dashboard-card,
+    .github-heatmap-container, .week-summary-bar, .modal-dialog, .day-cell, .glass-btn,
+    .journal-textarea {
+      transition: background 0.35s ease, background-color 0.35s ease, color 0.35s ease,
+                  border-color 0.35s ease, box-shadow 0.35s ease;
+    }
+
+    /* 3. APP CONTAINER & RESPONSIVE PADDING */
+    .app-wrapper {
+      position: relative;
+      z-index: 1;
+      max-width: 1300px;
+      width: 100%;
+      box-sizing: border-box;
+      margin: 0 auto;
+      padding: clamp(12px, 3vw, 24px) clamp(10px, 2.5vw, 20px) clamp(30px, 6vw, 60px);
+      padding-left: max(clamp(10px, 2.5vw, 20px), env(safe-area-inset-left));
+      padding-right: max(clamp(10px, 2.5vw, 20px), env(safe-area-inset-right));
+      display: flex;
+      flex-direction: column;
+      gap: clamp(16px, 3vw, 26px);
+    }
+
+    .app-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      flex-wrap: wrap;
+      gap: clamp(12px, 2.5vw, 16px);
+      padding-bottom: 4px;
+    }
+
+    .brand-section {
+      display: flex;
+      align-items: center;
+      gap: clamp(10px, 2vw, 14px);
+    }
+
+    .brand-icon {
+      width: clamp(40px, 6vw, 46px);
+      height: clamp(40px, 6vw, 46px);
+      min-width: 40px;
+      min-height: 40px;
+      border-radius: var(--radius-md);
+      background: linear-gradient(135deg, var(--mood-amazing) 0%, #3b82f6 50%, var(--accent-color) 100%);
+      display: grid;
+      place-items: center;
+      font-size: clamp(20px, 3.5vw, 24px);
+      box-shadow: 0 4px 14px var(--accent-glow);
+      transition: transform var(--transition-bounce);
+      flex-shrink: 0;
+    }
+    .brand-icon:hover { transform: scale(1.08) rotate(4deg); }
+
+    .brand-title {
+      font-size: clamp(1.2rem, 3.8vw, 1.625rem);
+      font-weight: 800;
+      letter-spacing: -0.03em;
+      line-height: 1.2;
+      background: linear-gradient(to right, var(--text-primary) 30%, var(--text-muted) 100%);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .brand-subtitle {
+      font-size: clamp(0.72rem, 2vw, 0.8125rem);
+      color: var(--text-muted);
+      font-weight: 500;
+      line-height: 1.3;
+      margin-top: 2px;
+    }
+
+    .header-actions {
+      display: flex;
+      align-items: center;
+      gap: clamp(6px, 1.5vw, 10px);
+      flex-wrap: wrap;
+    }
+
+    .glass-btn {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      gap: 7px;
+      padding: clamp(8px, 1.5vw, 10px) clamp(12px, 2vw, 16px);
+      min-height: 44px; /* Requirement: minimum 44px touch target */
+      border-radius: var(--radius-full);
+      background: var(--bg-surface);
+      backdrop-filter: blur(12px);
+      -webkit-backdrop-filter: blur(12px);
+      border: 1px solid var(--border-subtle);
+      color: var(--text-secondary);
+      font-size: clamp(12px, 1.8vw, 13px);
+      font-weight: 600;
+      transition: all var(--transition-normal);
+      box-shadow: var(--shadow-sm);
+      user-select: none;
+      cursor: pointer;
+    }
+    .glass-btn:hover {
+      background: var(--bg-surface-elevated);
+      color: var(--text-primary);
+      border-color: var(--border-medium);
+      transform: translateY(-1px);
+      box-shadow: var(--shadow-md);
+    }
+    .glass-btn:active { transform: translateY(1px); }
+
+    .glass-btn.active {
+      background: var(--accent-color);
+      color: #ffffff;
+      border-color: transparent;
+      box-shadow: 0 4px 14px var(--accent-glow);
+    }
+
+    /* 4. STATS BANNER CARDS */
+    .stats-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(clamp(130px, 22vw, 210px), 1fr));
+      gap: clamp(10px, 2vw, 16px);
+    }
+
+    .stat-card {
+      background: var(--bg-surface);
+      backdrop-filter: blur(16px);
+      -webkit-backdrop-filter: blur(16px);
+      border: 1px solid var(--border-subtle);
+      border-radius: var(--radius-lg);
+      padding: clamp(12px, 2.5vw, 18px) clamp(14px, 2.5vw, 20px);
+      display: flex;
+      flex-direction: column;
+      gap: 6px;
+      box-shadow: var(--shadow-sm);
+      position: relative;
+      overflow: hidden;
+      box-sizing: border-box;
+    }
+    .stat-card:hover {
+      transform: translateY(-2px);
+      border-color: var(--border-medium);
+    }
+    .stat-card::before {
+      content: '';
+      position: absolute;
+      top: 0;
+      left: 0;
+      width: 4px;
+      height: 100%;
+      background: var(--accent-color);
+      opacity: 0.6;
+    }
+    .stat-card.card-streak::before { background: var(--mood-amazing); }
+    .stat-card.card-avg::before { background: var(--mood-good); }
+    .stat-card.card-logged::before { background: #3b82f6; }
+    .stat-card.card-dominant::before { background: var(--mood-okay); }
+
+    .stat-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      color: var(--text-muted);
+      font-size: clamp(10px, 1.8vw, 12px);
+      font-weight: 600;
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+    }
+
+    .stat-value {
+      font-size: clamp(1.3rem, 3.5vw, 1.625rem);
+      font-weight: 800;
+      color: var(--text-primary);
+      display: flex;
+      align-items: baseline;
+      gap: 6px;
+      line-height: 1.2;
+    }
+
+    .stat-subtext {
+      font-size: clamp(10px, 1.8vw, 12px);
+      color: var(--text-muted);
+      display: flex;
+      align-items: center;
+      gap: 4px;
+      line-height: 1.3;
+      white-space: normal;
+      word-break: break-word;
+    }
+
+    /* 5. VIEW TOGGLE BAR */
+    .view-toggle-row {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      flex-wrap: wrap;
+      gap: 12px;
+    }
+
+    .calendar-view-toggle {
+      display: inline-flex;
+      background: var(--bg-input);
+      padding: 4px;
+      border-radius: var(--radius-full);
+      border: 1px solid var(--border-subtle);
+      max-width: 100%;
+    }
+
+    .toggle-pill {
+      padding: 8px clamp(12px, 2.5vw, 18px);
+      min-height: 44px; /* Requirement: 44px touch target */
+      font-size: clamp(12px, 2vw, 13px);
+      font-weight: 600;
+      border-radius: var(--radius-full);
+      color: var(--text-muted);
+      transition: all var(--transition-fast);
+      cursor: pointer;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      user-select: none;
+    }
+    .toggle-pill.active {
+      background: var(--accent-color);
+      color: #ffffff;
+      box-shadow: 0 2px 8px var(--accent-glow);
+    }
+
+    .view-toggle-tip {
+      font-size: clamp(11px, 1.8vw, 12px);
+      color: var(--text-muted);
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      flex-wrap: wrap;
+    }
+
+    /* 6. WORKSPACE LAYOUT (2 COLUMNS: CALENDAR + INSPECTOR) */
+    .workspace-layout {
+      display: grid;
+      grid-template-columns: minmax(0, 1fr) 340px;
+      gap: clamp(16px, 2.5vw, 24px);
+      align-items: start;
+      width: 100%;
+    }
+
+    /* 7. CALENDAR CARD & GRID */
+    .calendar-card {
+      background: var(--bg-surface);
+      backdrop-filter: blur(16px);
+      -webkit-backdrop-filter: blur(16px);
+      border: 1px solid var(--border-subtle);
+      border-radius: var(--radius-lg);
+      padding: clamp(12px, 2.5vw, 24px);
+      box-shadow: var(--shadow-md);
+      display: flex;
+      flex-direction: column;
+      gap: clamp(14px, 2.5vw, 20px);
+      min-width: 0;
+      box-sizing: border-box;
+      width: 100%;
+    }
+
+    .calendar-toolbar {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      flex-wrap: wrap;
+      gap: clamp(10px, 2vw, 14px);
+    }
+
+    .month-nav-group {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .nav-arrow-btn {
+      width: 44px;
+      height: 44px;
+      min-width: 44px;
+      min-height: 44px; /* Requirement: minimum 44x44 touch target */
+      border-radius: var(--radius-full);
+      background: var(--bg-surface-elevated);
+      border: 1px solid var(--border-subtle);
+      display: grid;
+      place-items: center;
+      color: var(--text-secondary);
+      font-size: 16px;
+      transition: all var(--transition-fast);
+      cursor: pointer;
+    }
+    .nav-arrow-btn:hover {
+      background: var(--bg-surface-active);
+      color: var(--text-primary);
+      border-color: var(--border-medium);
+      transform: scale(1.05);
+    }
+
+    .current-month-display {
+      font-size: clamp(1rem, 3vw, 1.375rem);
+      font-weight: 800;
+      color: var(--text-primary);
+      padding: 0 4px;
+      min-width: clamp(130px, 25vw, 200px);
+      text-align: center;
+      user-select: none;
+    }
+
+    /* 7-Column Responsive Calendar Grid */
+    .calendar-grid-wrapper {
+      width: 100%;
+      overflow-x: auto;
+      -webkit-overflow-scrolling: touch;
+    }
+
+    .calendar-grid {
+      display: grid;
+      grid-template-columns: repeat(7, minmax(0, 1fr));
+      gap: clamp(3px, 1vw, 10px);
+      width: 100%;
+      min-width: 0;
+      box-sizing: border-box;
+    }
+
+    .weekday-header {
+      text-align: center;
+      font-size: clamp(9px, 1.8vw, 12px);
+      font-weight: 700;
+      color: var(--text-muted);
+      text-transform: uppercase;
+      letter-spacing: 0.06em;
+      padding-bottom: 4px;
+      user-select: none;
+    }
+
+    /* Day Cell Component - Responsive scaling */
+    .day-cell {
+      aspect-ratio: 1 / 1;
+      min-height: clamp(44px, 7.5vw, 90px); /* 44px min touch target on smallest mobile */
+      background: var(--mood-empty);
+      border: 1px solid var(--mood-empty-border);
+      border-radius: clamp(6px, 1.2vw, var(--radius-md));
+      padding: clamp(3px, 0.8vw, 8px) clamp(3px, 1vw, 10px);
+      display: flex;
+      flex-direction: column;
+      justify-content: space-between;
+      position: relative;
+      cursor: pointer;
+      user-select: none;
+      outline: none;
+      box-sizing: border-box;
+    }
+
+    .day-cell:hover {
+      transform: translateY(-2px) scale(1.02);
+      box-shadow: var(--shadow-md);
+      border-color: var(--border-medium);
+      z-index: 4;
+    }
+    .day-cell:active { transform: scale(0.96); }
+
+    .day-cell.other-month {
+      opacity: 0.28;
+      cursor: pointer;
+      background: transparent;
+    }
+    .day-cell.other-month:hover { opacity: 0.65; }
+
+    /* TODAY HIGHLIGHT WITH PULSING BORDER ANIMATION */
+    @keyframes todayPulse {
+      0% {
+        box-shadow: 0 0 0 0 rgba(99, 102, 241, 0.7), 0 0 10px rgba(99, 102, 241, 0.35);
+        border-color: #6366f1;
+      }
+      50% {
+        box-shadow: 0 0 0 5px rgba(99, 102, 241, 0), 0 0 16px rgba(99, 102, 241, 0.75);
+        border-color: #a5b4fc;
+      }
+      100% {
+        box-shadow: 0 0 0 0 rgba(99, 102, 241, 0.7), 0 0 10px rgba(99, 102, 241, 0.35);
+        border-color: #6366f1;
+      }
+    }
+
+    .day-cell.is-today {
+      border: 2px solid var(--accent-color) !important;
+      animation: todayPulse 2.2s infinite ease-in-out;
+      position: relative;
+      z-index: 3;
+    }
+    .day-cell.is-today .day-number {
+      font-weight: 800;
+      color: var(--accent-color);
+    }
+
+    .today-pill-badge {
+      font-size: clamp(6px, 1.4vw, 8px);
+      font-weight: 800;
+      letter-spacing: 0.04em;
+      padding: 1px 4px;
+      border-radius: var(--radius-full);
+      background: var(--accent-color);
+      color: #ffffff;
+      box-shadow: 0 2px 6px var(--accent-glow);
+      text-transform: uppercase;
+      line-height: 1.2;
+    }
+
+    .day-cell.is-selected {
+      box-shadow: 0 0 0 2px #ffffff, var(--shadow-md);
+      z-index: 5;
+    }
+    [data-theme="light"] .day-cell.is-selected {
+      box-shadow: 0 0 0 2px #0f172a, var(--shadow-md);
+    }
+
+    .day-top-row {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      width: 100%;
+    }
+
+    .day-number {
+      font-size: clamp(10px, 2vw, 14px);
+      font-weight: 600;
+      color: var(--text-secondary);
+      line-height: 1;
+    }
+
+    .day-badges-wrap {
+      display: flex;
+      align-items: center;
+      gap: 3px;
+    }
+
+    .day-note-badge {
+      width: clamp(5px, 1vw, 7px);
+      height: clamp(5px, 1vw, 7px);
+      border-radius: 50%;
+      background: #3b82f6;
+      box-shadow: 0 0 6px #3b82f6;
+      display: none;
+    }
+    .day-cell.has-note .day-note-badge {
+      display: inline-block;
+    }
+
+    /* MOOD EMOJI ON EACH DAY CELL */
+    .day-mood-center {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      flex-grow: 1;
+      padding: 1px 0;
+    }
+
+    .day-mood-emoji {
+      font-size: clamp(14px, 3.2vw, 24px);
+      transition: transform var(--transition-bounce);
+      filter: drop-shadow(0 2px 4px rgba(0,0,0,0.25));
+      line-height: 1;
+    }
+    .day-cell:hover .day-mood-emoji {
+      transform: scale(1.2);
+    }
+
+    .day-bottom-row {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      font-size: clamp(8px, 1.5vw, 10px);
+      font-weight: 700;
+      letter-spacing: 0.03em;
+      text-transform: uppercase;
+      opacity: 0.9;
+    }
+
+    .day-mood-label {
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+      max-width: 100%;
+    }
+
+    /* WEEKLY SUMMARY BAR AT BOTTOM OF EACH WEEK */
+    .week-summary-bar {
+      grid-column: 1 / -1;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      flex-wrap: wrap;
+      gap: 8px;
+      padding: clamp(6px, 1.5vw, 8px) clamp(10px, 2vw, 16px);
+      background: var(--bg-surface-elevated);
+      border: 1px solid var(--border-subtle);
+      border-radius: var(--radius-md);
+      margin: 4px 0 8px;
+      font-size: clamp(11px, 1.8vw, 12px);
+      color: var(--text-muted);
+      box-shadow: var(--shadow-sm);
+      box-sizing: border-box;
+      width: 100%;
+    }
+    .week-summary-bar:hover {
+      border-color: var(--border-medium);
+      background: var(--bg-surface-active);
+    }
+
+    .week-info-left {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      flex-wrap: wrap;
+    }
+    .week-num-badge {
+      font-weight: 800;
+      font-size: clamp(10px, 1.6vw, 11px);
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+      padding: 3px 8px;
+      border-radius: var(--radius-full);
+      background: var(--bg-input);
+      border: 1px solid var(--border-subtle);
+      color: var(--text-primary);
+    }
+    .week-dates-span {
+      font-size: clamp(11px, 1.8vw, 12px);
+      color: var(--text-secondary);
+      font-weight: 500;
+    }
+
+    .week-mini-spectrum {
+      display: flex;
+      align-items: center;
+      gap: clamp(4px, 1vw, 6px);
+    }
+    .spectrum-dot {
+      width: clamp(8px, 1.5vw, 10px);
+      height: clamp(8px, 1.5vw, 10px);
+      border-radius: 50%;
+      background: var(--mood-empty-border);
+      transition: transform var(--transition-fast);
+      flex-shrink: 0;
+    }
+    .spectrum-dot:hover { transform: scale(1.4); }
+    .spectrum-dot[data-mood="1"] { background: var(--mood-amazing); box-shadow: 0 0 6px var(--mood-amazing-glow); }
+    .spectrum-dot[data-mood="2"] { background: var(--mood-good); box-shadow: 0 0 6px var(--mood-good-glow); }
+    .spectrum-dot[data-mood="3"] { background: var(--mood-okay); box-shadow: 0 0 6px var(--mood-okay-glow); }
+    .spectrum-dot[data-mood="4"] { background: var(--mood-bad); box-shadow: 0 0 6px var(--mood-bad-glow); }
+    .spectrum-dot[data-mood="5"] { background: var(--mood-terrible); box-shadow: 0 0 6px var(--mood-terrible-glow); }
+
+    .week-info-right {
+      display: flex;
+      align-items: center;
+      gap: clamp(8px, 1.8vw, 12px);
+      flex-wrap: wrap;
+    }
+    .week-logged-stat, .week-avg-stat {
+      font-size: clamp(11px, 1.8vw, 12px);
+      color: var(--text-secondary);
+    }
+    .week-status-pill {
+      padding: 2px 8px;
+      border-radius: var(--radius-full);
+      font-size: clamp(10px, 1.6vw, 11px);
+      font-weight: 700;
+      background: var(--bg-input);
+      border: 1px solid var(--border-subtle);
+      color: var(--text-primary);
+    }
+
+    /* Mood Coloring for Calendar Day Cells */
+    .day-cell[data-mood="1"] { background: var(--mood-amazing-bg); border-color: var(--mood-amazing); color: #ffffff; }
+    .day-cell[data-mood="1"]:hover { box-shadow: 0 8px 24px var(--mood-amazing-glow); }
+    .day-cell[data-mood="1"] .day-number, .day-cell[data-mood="1"] .day-bottom-row { color: #ecfdf5; }
+
+    .day-cell[data-mood="2"] { background: var(--mood-good-bg); border-color: var(--mood-good); color: #ffffff; }
+    .day-cell[data-mood="2"]:hover { box-shadow: 0 8px 24px var(--mood-good-glow); }
+    .day-cell[data-mood="2"] .day-number, .day-cell[data-mood="2"] .day-bottom-row { color: #f7fee7; }
+
+    .day-cell[data-mood="3"] { background: var(--mood-okay-bg); border-color: var(--mood-okay); color: #ffffff; }
+    .day-cell[data-mood="3"]:hover { box-shadow: 0 8px 24px var(--mood-okay-glow); }
+    .day-cell[data-mood="3"] .day-number, .day-cell[data-mood="3"] .day-bottom-row { color: #fefce8; }
+
+    .day-cell[data-mood="4"] { background: var(--mood-bad-bg); border-color: var(--mood-bad); color: #ffffff; }
+    .day-cell[data-mood="4"]:hover { box-shadow: 0 8px 24px var(--mood-bad-glow); }
+    .day-cell[data-mood="4"] .day-number, .day-cell[data-mood="4"] .day-bottom-row { color: #fff7ed; }
+
+    .day-cell[data-mood="5"] { background: var(--mood-terrible-bg); border-color: var(--mood-terrible); color: #ffffff; }
+    .day-cell[data-mood="5"]:hover { box-shadow: 0 8px 24px var(--mood-terrible-glow); }
+    .day-cell[data-mood="5"] .day-number, .day-cell[data-mood="5"] .day-bottom-row { color: #fef2f2; }
+
+    [data-theme="light"] .day-cell[data-mood="1"] { color: #064e3b; }
+    [data-theme="light"] .day-cell[data-mood="1"] .day-number, [data-theme="light"] .day-cell[data-mood="1"] .day-bottom-row { color: #064e3b; }
+    [data-theme="light"] .day-cell[data-mood="2"] { color: #365314; }
+    [data-theme="light"] .day-cell[data-mood="2"] .day-number, [data-theme="light"] .day-cell[data-mood="2"] .day-bottom-row { color: #365314; }
+    [data-theme="light"] .day-cell[data-mood="3"] { color: #713f12; }
+    [data-theme="light"] .day-cell[data-mood="3"] .day-number, [data-theme="light"] .day-cell[data-mood="3"] .day-bottom-row { color: #713f12; }
+    [data-theme="light"] .day-cell[data-mood="4"] { color: #7c2d12; }
+    [data-theme="light"] .day-cell[data-mood="4"] .day-number, [data-theme="light"] .day-cell[data-mood="4"] .day-bottom-row { color: #7c2d12; }
+    [data-theme="light"] .day-cell[data-mood="5"] { color: #7f1d1d; }
+    [data-theme="light"] .day-cell[data-mood="5"] .day-number, [data-theme="light"] .day-cell[data-mood="5"] .day-bottom-row { color: #7f1d1d; }
+
+    /* Legend & Progress Stack */
+    .legend-container {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      flex-wrap: wrap;
+      gap: 10px;
+      padding-top: 12px;
+      border-top: 1px solid var(--border-subtle);
+    }
+    .legend-label {
+      font-size: clamp(11px, 1.8vw, 12px);
+      font-weight: 700;
+      color: var(--text-muted);
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+    }
+    .legend-chips {
+      display: flex;
+      align-items: center;
+      gap: clamp(6px, 1.5vw, 10px);
+      flex-wrap: wrap;
+    }
+    .legend-chip {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      padding: clamp(6px, 1.5vw, 8px) clamp(10px, 2vw, 14px);
+      min-height: 44px; /* Requirement: 44px touch target */
+      border-radius: var(--radius-full);
+      background: var(--bg-surface-elevated);
+      border: 1px solid var(--border-subtle);
+      font-size: clamp(11px, 1.8vw, 12px);
+      font-weight: 600;
+      color: var(--text-secondary);
+      cursor: pointer;
+      user-select: none;
+    }
+    .legend-chip:hover {
+      transform: translateY(-2px);
+      border-color: var(--chip-color, var(--border-medium));
+      box-shadow: 0 4px 12px var(--chip-glow, transparent);
+      color: var(--text-primary);
+    }
+    .legend-swatch {
+      width: 11px;
+      height: 11px;
+      border-radius: 3px;
+      background: var(--chip-color);
+      box-shadow: 0 0 6px var(--chip-glow);
+      flex-shrink: 0;
+    }
+    .legend-count {
+      font-size: 11px;
+      font-family: var(--font-mono);
+      background: var(--bg-input);
+      padding: 1px 6px;
+      border-radius: 10px;
+      color: var(--text-muted);
+    }
+
+    .calendar-grid.filtering .day-cell:not(.filter-matched) {
+      opacity: 0.15;
+      filter: grayscale(80%);
+    }
+
+    .breakdown-card {
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+    }
+    .breakdown-header {
+      display: flex;
+      justify-content: space-between;
+      font-size: clamp(11px, 1.8vw, 12px);
+      color: var(--text-muted);
+      font-weight: 600;
+    }
+    .progress-bar-stack {
+      display: flex;
+      height: 10px;
+      width: 100%;
+      border-radius: var(--radius-full);
+      overflow: hidden;
+      background: var(--bg-input);
+      border: 1px solid var(--border-subtle);
+    }
+    .progress-segment {
+      height: 100%;
+      transition: width var(--transition-normal);
+      position: relative;
+    }
+    .progress-segment.seg-1 { background: var(--mood-amazing); }
+    .progress-segment.seg-2 { background: var(--mood-good); }
+    .progress-segment.seg-3 { background: var(--mood-okay); }
+    .progress-segment.seg-4 { background: var(--mood-bad); }
+    .progress-segment.seg-5 { background: var(--mood-terrible); }
+
+    /* 8. SIDEBAR JOURNAL & INSPECTOR */
+    .sidebar-card {
+      background: var(--bg-surface);
+      backdrop-filter: blur(16px);
+      -webkit-backdrop-filter: blur(16px);
+      border: 1px solid var(--border-subtle);
+      border-radius: var(--radius-lg);
+      padding: clamp(16px, 3vw, 24px);
+      box-shadow: var(--shadow-md);
+      display: flex;
+      flex-direction: column;
+      gap: clamp(14px, 2.5vw, 18px);
+      position: sticky;
+      top: 24px;
+      box-sizing: border-box;
+      width: 100%;
+    }
+
+    .sidebar-title-row {
+      display: flex;
+      justify-content: space-between;
+      align-items: flex-start;
+      gap: 12px;
+    }
+    .selected-date-title {
+      font-size: clamp(1.1rem, 2.5vw, 1.15rem);
+      font-weight: 800;
+      color: var(--text-primary);
+    }
+    .selected-date-subtitle {
+      font-size: clamp(11px, 1.8vw, 13px);
+      color: var(--text-muted);
+      margin-top: 2px;
+    }
+
+    .mood-selector-label {
+      font-size: clamp(11px, 1.8vw, 12px);
+      font-weight: 700;
+      color: var(--text-muted);
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+    }
+
+    .mood-options-grid {
+      display: grid;
+      grid-template-columns: repeat(5, minmax(0, 1fr));
+      gap: 6px;
+    }
+    .mood-btn-pill {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      gap: 4px;
+      padding: clamp(8px, 1.5vw, 10px) 2px;
+      min-height: 48px; /* Requirement: 44px+ touch target */
+      border-radius: var(--radius-md);
+      background: var(--bg-surface-elevated);
+      border: 1px solid var(--border-subtle);
+      transition: all var(--transition-bounce);
+      cursor: pointer;
+      user-select: none;
+    }
+    .mood-btn-pill:hover {
+      transform: translateY(-2px);
+      border-color: var(--btn-color);
+      box-shadow: 0 4px 12px var(--btn-glow);
+    }
+    .mood-btn-pill.selected {
+      background: var(--btn-bg);
+      border-color: var(--btn-color);
+      box-shadow: 0 0 16px var(--btn-glow);
+      transform: scale(1.04);
+    }
+    .mood-btn-emoji { font-size: clamp(18px, 3vw, 20px); }
+    .mood-btn-name {
+      font-size: clamp(9px, 1.5vw, 10px);
+      font-weight: 700;
+      color: var(--text-secondary);
+      text-transform: capitalize;
+      text-align: center;
+    }
+
+    .journal-section { display: flex; flex-direction: column; gap: 8px; }
+    .journal-textarea {
+      width: 100%;
+      min-height: 90px;
+      padding: 12px;
+      border-radius: var(--radius-md);
+      background: var(--bg-input);
+      border: 1px solid var(--border-subtle);
+      color: var(--text-primary);
+      font-size: 14px;
+      line-height: 1.5;
+      resize: vertical;
+      box-sizing: border-box;
+    }
+    .journal-textarea:focus {
+      border-color: var(--accent-color);
+      box-shadow: 0 0 0 3px var(--accent-glow);
+    }
+
+    .tags-section { display: flex; flex-direction: column; gap: 8px; }
+    .tag-chips-wrap { display: flex; flex-wrap: wrap; gap: 6px; }
+    .tag-chip {
+      padding: clamp(8px, 1.5vw, 10px) clamp(10px, 2vw, 14px);
+      min-height: 44px; /* Requirement: 44px touch target */
+      border-radius: var(--radius-full);
+      background: var(--bg-surface-elevated);
+      border: 1px solid var(--border-subtle);
+      font-size: clamp(11px, 1.8vw, 12px);
+      font-weight: 600;
+      color: var(--text-muted);
+      cursor: pointer;
+      transition: all var(--transition-fast);
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      user-select: none;
+    }
+    .tag-chip:hover { color: var(--text-primary); border-color: var(--border-medium); }
+    .tag-chip.active {
+      background: rgba(99, 102, 241, 0.2);
+      border-color: var(--accent-color);
+      color: var(--text-primary);
+    }
+
+    .sidebar-actions { display: flex; gap: 8px; flex-wrap: wrap; }
+    .action-btn {
+      flex: 1;
+      padding: clamp(10px, 2vw, 12px);
+      min-height: 44px; /* Requirement: 44px touch target */
+      border-radius: var(--radius-md);
+      font-size: clamp(12px, 2vw, 13px);
+      font-weight: 700;
+      text-align: center;
+      transition: all var(--transition-fast);
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      user-select: none;
+      cursor: pointer;
+    }
+    .action-btn-primary {
+      background: var(--accent-color);
+      color: #ffffff;
+      box-shadow: 0 4px 12px var(--accent-glow);
+    }
+    .action-btn-primary:hover { background: var(--accent-hover); transform: translateY(-1px); }
+    .action-btn-danger {
+      background: var(--bg-surface-elevated);
+      border: 1px solid var(--border-subtle);
+      color: var(--text-muted);
+    }
+    .action-btn-danger:hover {
+      background: rgba(239, 68, 68, 0.15);
+      border-color: var(--mood-terrible);
+      color: var(--mood-terrible);
+    }
+
+    .quote-box {
+      padding: 12px 14px;
+      border-radius: var(--radius-md);
+      background: var(--bg-surface-elevated);
+      border-left: 3px solid var(--accent-color);
+      font-size: clamp(11px, 1.8vw, 12px);
+      font-style: italic;
+      color: var(--text-secondary);
+      line-height: 1.4;
+      word-break: break-word;
+    }
+
+    /* 9. STATISTICS DASHBOARD BELOW CALENDAR */
+    .stats-dashboard-card {
+      background: var(--bg-surface);
+      backdrop-filter: blur(16px);
+      -webkit-backdrop-filter: blur(16px);
+      border: 1px solid var(--border-subtle);
+      border-radius: var(--radius-lg);
+      padding: clamp(14px, 3vw, 24px);
+      box-shadow: var(--shadow-md);
+      display: flex;
+      flex-direction: column;
+      gap: clamp(14px, 2.5vw, 20px);
+      box-sizing: border-box;
+      width: 100%;
+    }
+
+    .stats-dashboard-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      flex-wrap: wrap;
+      gap: 12px;
+      padding-bottom: 12px;
+      border-bottom: 1px solid var(--border-subtle);
+    }
+
+    .stats-title-group {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+    }
+    .stats-title-icon {
+      font-size: clamp(20px, 3vw, 26px);
+      background: var(--bg-input);
+      width: 44px;
+      height: 44px;
+      min-width: 44px;
+      min-height: 44px;
+      border-radius: var(--radius-md);
+      display: grid;
+      place-items: center;
+      border: 1px solid var(--border-subtle);
+      flex-shrink: 0;
+    }
+    .stats-dashboard-title {
+      font-size: clamp(1.05rem, 2.8vw, 1.15rem);
+      font-weight: 800;
+      color: var(--text-primary);
+      line-height: 1.2;
+    }
+    .stats-dashboard-sub {
+      font-size: clamp(11px, 1.8vw, 12px);
+      color: var(--text-muted);
+      margin-top: 2px;
+    }
+
+    .stats-timeframe-toggle {
+      display: inline-flex;
+      background: var(--bg-input);
+      padding: 3px;
+      border-radius: var(--radius-full);
+      border: 1px solid var(--border-subtle);
+      max-width: 100%;
+    }
+    .timeframe-btn {
+      padding: 6px clamp(12px, 2vw, 16px);
+      min-height: 44px; /* Requirement: 44px touch target */
+      font-size: clamp(11px, 1.8vw, 12px);
+      font-weight: 600;
+      border-radius: var(--radius-full);
+      color: var(--text-muted);
+      transition: all var(--transition-fast);
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      cursor: pointer;
+      user-select: none;
+    }
+    .timeframe-btn.active {
+      background: var(--accent-color);
+      color: #ffffff;
+      box-shadow: 0 2px 6px var(--accent-glow);
+    }
+
+    .stats-dashboard-grid {
+      display: grid;
+      grid-template-columns: minmax(260px, 360px) repeat(3, minmax(0, 1fr));
+      gap: clamp(12px, 2vw, 20px);
+      width: 100%;
+    }
+
+    .analytics-card {
+      background: var(--bg-surface-elevated);
+      border: 1px solid var(--border-subtle);
+      border-radius: var(--radius-md);
+      padding: clamp(14px, 2.5vw, 20px);
+      display: flex;
+      flex-direction: column;
+      justify-content: space-between;
+      gap: 12px;
+      box-shadow: var(--shadow-sm);
+      box-sizing: border-box;
+    }
+    .analytics-card:hover {
+      border-color: var(--border-medium);
+      transform: translateY(-2px);
+    }
+
+    .analytics-card-title {
+      font-size: clamp(11px, 1.8vw, 13px);
+      font-weight: 700;
+      color: var(--text-muted);
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+    }
+
+    .donut-chart-wrapper {
+      display: flex;
+      align-items: center;
+      gap: clamp(10px, 2vw, 16px);
+      flex-wrap: wrap;
+      justify-content: center;
+      width: 100%;
+    }
+
+    #stats-donut-chart {
+      width: 140px;
+      height: 140px;
+      max-width: 100%;
+      flex-shrink: 0;
+    }
+
+    .donut-legend {
+      display: flex;
+      flex-direction: column;
+      gap: 6px;
+      flex: 1;
+      min-width: 120px;
+    }
+    .donut-legend-item {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      font-size: clamp(10px, 1.8vw, 11px);
+      color: var(--text-secondary);
+      padding: 2px 4px;
+      border-radius: 4px;
+      transition: background var(--transition-fast);
+    }
+    .donut-legend-item:hover {
+      background: var(--bg-input);
+    }
+    .donut-swatch {
+      width: 8px;
+      height: 8px;
+      border-radius: 50%;
+      margin-right: 6px;
+      display: inline-block;
+      flex-shrink: 0;
+    }
+
+    .metric-top {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      color: var(--text-muted);
+      font-size: clamp(11px, 1.8vw, 12px);
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+    }
+    .metric-icon { font-size: 18px; }
+
+    .metric-main {
+      display: flex;
+      align-items: baseline;
+      gap: 8px;
+      flex-wrap: wrap;
+    }
+    .metric-big {
+      font-size: clamp(1.6rem, 4.5vw, 2rem);
+      font-weight: 800;
+      color: var(--text-primary);
+      line-height: 1;
+    }
+    .metric-unit {
+      font-size: clamp(12px, 2vw, 14px);
+      color: var(--text-muted);
+      font-weight: 600;
+    }
+    .metric-sub-badge {
+      font-size: clamp(10px, 1.6vw, 11px);
+      font-weight: 700;
+      padding: 2px 8px;
+      border-radius: var(--radius-full);
+      background: var(--bg-input);
+      color: var(--text-primary);
+      border: 1px solid var(--border-subtle);
+    }
+
+    .score-bar-track {
+      width: 100%;
+      height: 7px;
+      border-radius: var(--radius-full);
+      background: var(--bg-input);
+      overflow: hidden;
+      border: 1px solid var(--border-subtle);
+    }
+    .score-bar-fill {
+      height: 100%;
+      border-radius: var(--radius-full);
+      background: linear-gradient(90deg, #3b82f6, var(--mood-amazing));
+      transition: width var(--transition-normal);
+    }
+
+    .streak-details-row {
+      display: flex;
+      flex-direction: column;
+      gap: 4px;
+      font-size: clamp(10px, 1.8vw, 11px);
+      color: var(--text-muted);
+    }
+    .streak-details-row strong {
+      color: var(--text-primary);
+    }
+
+    .metric-footnote {
+      font-size: clamp(10px, 1.8vw, 11px);
+      color: var(--text-muted);
+      word-break: break-word;
+    }
+
+    /* 10. GITHUB-STYLE YEAR VIEW (Heatmap scrolls horizontally on mobile) */
+    .year-view-container {
+      display: none;
+      flex-direction: column;
+      gap: clamp(16px, 2.5vw, 24px);
+      width: 100%;
+    }
+    .year-view-container.active {
+      display: flex;
+    }
+
+    .github-heatmap-container {
+      background: var(--bg-surface);
+      backdrop-filter: blur(16px);
+      -webkit-backdrop-filter: blur(16px);
+      border: 1px solid var(--border-subtle);
+      border-radius: var(--radius-lg);
+      padding: clamp(14px, 3vw, 24px);
+      box-shadow: var(--shadow-md);
+      display: flex;
+      flex-direction: column;
+      gap: 16px;
+      width: 100%;
+      max-width: 100%;
+      box-sizing: border-box;
+      overflow: hidden; /* Requirement: no page blowout */
+    }
+
+    .github-scroll-hint {
+      display: none;
+      font-size: 11px;
+      color: var(--text-muted);
+      text-align: center;
+      padding-bottom: 2px;
+      user-select: none;
+    }
+
+    .github-scroll-wrap {
+      overflow-x: auto;
+      padding-bottom: 8px;
+      -webkit-overflow-scrolling: touch;
+      width: 100%;
+      scrollbar-width: thin;
+    }
+    .github-scroll-wrap::-webkit-scrollbar {
+      height: 6px;
+    }
+    .github-scroll-wrap::-webkit-scrollbar-thumb {
+      background: var(--border-medium);
+      border-radius: var(--radius-full);
+    }
+
+    .github-graph-inner {
+      display: flex;
+      gap: 8px;
+      width: max-content;
+      margin: 0 auto;
+    }
+
+    .github-day-labels {
+      display: grid;
+      grid-template-rows: repeat(7, 13px);
+      gap: 3px;
+      font-size: 10px;
+      font-weight: 600;
+      color: var(--text-muted);
+      padding-top: 24px; /* Space for month labels */
+      text-align: right;
+      padding-right: 4px;
+      user-select: none;
+    }
+
+    .github-days-and-months {
+      display: flex;
+      flex-direction: column;
+      gap: 6px;
+    }
+
+    .github-months-row {
+      display: flex;
+      position: relative;
+      height: 18px;
+      font-size: 11px;
+      font-weight: 700;
+      color: var(--text-muted);
+      user-select: none;
+    }
+    .github-month-tag {
+      position: absolute;
+      white-space: nowrap;
+    }
+
+    .github-weeks-grid {
+      display: flex;
+      gap: 3px;
+    }
+
+    .github-week-col {
+      display: grid;
+      grid-template-rows: repeat(7, 13px);
+      gap: 3px;
+    }
+
+    .github-cell {
+      width: 13px;
+      height: 13px;
+      border-radius: 3px;
+      background: var(--mood-empty);
+      border: 1px solid var(--mood-empty-border);
+      cursor: pointer;
+      transition: transform var(--transition-fast), outline var(--transition-fast);
+      position: relative;
+      touch-action: manipulation;
+    }
+    .github-cell:hover {
+      transform: scale(1.4);
+      z-index: 20;
+      box-shadow: 0 2px 8px rgba(0,0,0,0.5);
+    }
+    .github-cell.empty-pad {
+      visibility: hidden;
+      pointer-events: none;
+    }
+
+    .github-cell[data-mood="1"] { background: var(--mood-amazing); border-color: var(--mood-amazing); }
+    .github-cell[data-mood="2"] { background: var(--mood-good); border-color: var(--mood-good); }
+    .github-cell[data-mood="3"] { background: var(--mood-okay); border-color: var(--mood-okay); }
+    .github-cell[data-mood="4"] { background: var(--mood-bad); border-color: var(--mood-bad); }
+    .github-cell[data-mood="5"] { background: var(--mood-terrible); border-color: var(--mood-terrible); }
+
+    .github-cell.is-today {
+      border: 2px solid var(--accent-color) !important;
+      animation: todayPulse 2.2s infinite ease-in-out;
+      transform: scale(1.2);
+      z-index: 10;
+    }
+
+    .github-footer-row {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      flex-wrap: wrap;
+      gap: 12px;
+      font-size: clamp(11px, 1.8vw, 12px);
+      color: var(--text-muted);
+      padding-top: 10px;
+      border-top: 1px solid var(--border-subtle);
+    }
+
+    .github-legend {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      font-size: 11px;
+      flex-wrap: wrap;
+    }
+
+    .year-months-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(clamp(240px, 100%, 280px), 1fr));
+      gap: clamp(12px, 2.5vw, 18px);
+      width: 100%;
+    }
+    .mini-month-card {
+      background: var(--bg-surface);
+      backdrop-filter: blur(14px);
+      -webkit-backdrop-filter: blur(14px);
+      border: 1px solid var(--border-subtle);
+      border-radius: var(--radius-md);
+      padding: clamp(12px, 2.5vw, 16px);
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+      box-sizing: border-box;
+    }
+    .mini-month-card:hover {
+      border-color: var(--border-medium);
+      transform: translateY(-2px);
+    }
+    .mini-month-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      font-size: clamp(13px, 2vw, 14px);
+      font-weight: 700;
+      color: var(--text-primary);
+    }
+    .mini-grid {
+      display: grid;
+      grid-template-columns: repeat(7, 1fr);
+      gap: 4px;
+    }
+    .mini-day-cell {
+      aspect-ratio: 1;
+      border-radius: 4px;
+      background: var(--mood-empty);
+      border: 1px solid var(--mood-empty-border);
+      cursor: pointer;
+      transition: transform var(--transition-fast);
+      position: relative;
+      touch-action: manipulation;
+    }
+    .mini-day-cell:hover {
+      transform: scale(1.35);
+      z-index: 10;
+      box-shadow: 0 2px 8px rgba(0,0,0,0.4);
+    }
+    .mini-day-cell.empty-pad { visibility: hidden; pointer-events: none; }
+    .mini-day-cell[data-mood="1"] { background: var(--mood-amazing); border-color: var(--mood-amazing); }
+    .mini-day-cell[data-mood="2"] { background: var(--mood-good); border-color: var(--mood-good); }
+    .mini-day-cell[data-mood="3"] { background: var(--mood-okay); border-color: var(--mood-okay); }
+    .mini-day-cell[data-mood="4"] { background: var(--mood-bad); border-color: var(--mood-bad); }
+    .mini-day-cell[data-mood="5"] { background: var(--mood-terrible); border-color: var(--mood-terrible); }
+
+    /* 11. MOOD NOTES POPUP MODAL (Centered, fully responsive, zero overflow) */
+    .modal-backdrop {
+      position: fixed;
+      inset: 0;
+      width: 100vw;
+      width: 100%;
+      height: 100vh;
+      height: 100dvh;
+      background: rgba(0, 0, 0, 0.68);
+      backdrop-filter: blur(8px);
+      -webkit-backdrop-filter: blur(8px);
+      z-index: 2000;
+      display: none;
+      place-items: center;
+      padding: clamp(10px, 3vw, 20px);
+      box-sizing: border-box;
+      overflow-y: auto;
+    }
+    .modal-backdrop.open {
+      display: grid;
+      animation: modalFadeIn 0.2s ease-out;
+    }
+
+    @keyframes modalFadeIn {
+      from { opacity: 0; transform: scale(0.96); }
+      to { opacity: 1; transform: scale(1); }
+    }
+
+    .modal-dialog {
+      background: var(--bg-surface-elevated);
+      border: 1px solid var(--border-medium);
+      border-radius: var(--radius-lg);
+      padding: clamp(16px, 4vw, 26px);
+      max-width: 520px;
+      width: min(520px, 100%);
+      max-height: calc(100vh - 24px);
+      max-height: calc(100dvh - 24px);
+      overflow-y: auto;
+      box-shadow: var(--shadow-lg);
+      display: flex;
+      flex-direction: column;
+      gap: clamp(12px, 3vw, 18px);
+      box-sizing: border-box;
+      margin: auto;
+    }
+
+    .modal-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: flex-start;
+      border-bottom: 1px solid var(--border-subtle);
+      padding-bottom: 12px;
+      gap: 12px;
+    }
+    .modal-title {
+      font-size: clamp(1.1rem, 3.5vw, 1.25rem);
+      font-weight: 800;
+      color: var(--text-primary);
+      line-height: 1.2;
+    }
+    .modal-close-btn {
+      font-size: 20px;
+      color: var(--text-muted);
+      width: 44px;
+      height: 44px;
+      min-width: 44px;
+      min-height: 44px; /* Requirement: 44px touch target */
+      border-radius: var(--radius-sm);
+      display: grid;
+      place-items: center;
+      flex-shrink: 0;
+      cursor: pointer;
+    }
+    .modal-close-btn:hover { color: var(--text-primary); background: var(--bg-input); }
+
+    .modal-section-label {
+      font-size: clamp(11px, 1.8vw, 12px);
+      font-weight: 700;
+      color: var(--text-muted);
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+      margin-bottom: 6px;
+      display: block;
+    }
+
+    .modal-mood-grid {
+      display: grid;
+      grid-template-columns: repeat(5, minmax(0, 1fr));
+      gap: clamp(4px, 1.5vw, 8px);
+    }
+    .modal-mood-btn {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      gap: 4px;
+      padding: clamp(8px, 2vw, 12px) 2px;
+      min-height: 48px; /* Requirement: 44px touch target */
+      border-radius: var(--radius-md);
+      background: var(--bg-input);
+      border: 1px solid var(--border-subtle);
+      transition: all var(--transition-bounce);
+      cursor: pointer;
+      user-select: none;
+    }
+    .modal-mood-btn:hover {
+      transform: translateY(-2px);
+      border-color: var(--mood-btn-color);
+      box-shadow: 0 4px 12px var(--mood-btn-glow);
+    }
+    .modal-mood-btn.selected {
+      background: var(--mood-btn-bg);
+      border-color: var(--mood-btn-color);
+      box-shadow: 0 0 16px var(--mood-btn-glow);
+      transform: scale(1.05);
+    }
+    .modal-mood-btn .m-emoji { font-size: clamp(18px, 4vw, 24px); }
+    .modal-mood-btn .m-label {
+      font-size: clamp(9px, 2vw, 11px);
+      font-weight: 700;
+      color: var(--text-primary);
+      text-align: center;
+    }
+    .modal-mood-btn .m-score {
+      font-size: clamp(8px, 1.8vw, 9px);
+      color: var(--text-muted);
+    }
+
+    .modal-footer-actions {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      gap: 10px;
+      border-top: 1px solid var(--border-subtle);
+      padding-top: 14px;
+      flex-wrap: wrap;
+    }
+
+    /* 12. HOVER TOOLTIP FOR NOTES */
+    .app-hover-tooltip {
+      position: fixed;
+      z-index: 9999;
+      pointer-events: none;
+      background: var(--bg-surface-elevated);
+      border: 1px solid var(--border-medium);
+      backdrop-filter: blur(14px);
+      -webkit-backdrop-filter: blur(14px);
+      box-shadow: var(--shadow-lg);
+      border-radius: var(--radius-md);
+      padding: 10px 14px;
+      max-width: min(280px, 85vw);
+      opacity: 0;
+      transform: scale(0.95) translateY(4px);
+      transition: opacity 0.15s ease, transform 0.15s ease;
+      font-size: 12px;
+      line-height: 1.4;
+      color: var(--text-primary);
+      box-sizing: border-box;
+    }
+    .app-hover-tooltip.visible {
+      opacity: 1;
+      transform: scale(1) translateY(0);
+    }
+    .tooltip-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      gap: 8px;
+      margin-bottom: 4px;
+    }
+    .tooltip-date { font-weight: 800; font-size: 12px; color: var(--text-primary); }
+    .tooltip-mood {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      font-weight: 700;
+      margin-bottom: 6px;
+    }
+    .tooltip-note {
+      font-style: italic;
+      color: var(--text-secondary);
+      background: var(--bg-input);
+      padding: 6px 8px;
+      border-radius: 6px;
+      border-left: 2px solid var(--accent-color);
+      margin-top: 4px;
+      word-break: break-word;
+    }
+    .tooltip-tags {
+      display: flex;
+      gap: 4px;
+      flex-wrap: wrap;
+      margin-top: 6px;
+    }
+    .tooltip-tag-pill {
+      font-size: 9px;
+      background: rgba(99, 102, 241, 0.2);
+      border: 1px solid var(--accent-color);
+      padding: 1px 6px;
+      border-radius: var(--radius-full);
+      color: var(--text-primary);
+    }
+    .tooltip-action-hint {
+      font-size: 10px;
+      color: var(--text-muted);
+      margin-top: 6px;
+      text-align: right;
+    }
+
+    /* 13. TOASTS & CANVAS CONFETTI */
+    .toast-container {
+      position: fixed;
+      bottom: clamp(16px, 4vw, 24px);
+      right: clamp(16px, 4vw, 24px);
+      z-index: 3000;
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+      pointer-events: none;
+      max-width: calc(100vw - 32px);
+    }
+    .toast-pill {
+      background: var(--bg-surface-elevated);
+      border: 1px solid var(--border-medium);
+      backdrop-filter: blur(14px);
+      padding: 12px 18px;
+      border-radius: var(--radius-full);
+      box-shadow: var(--shadow-md);
+      font-size: clamp(12px, 2vw, 13px);
+      font-weight: 600;
+      color: var(--text-primary);
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      animation: toastSlideUp 0.3s var(--transition-bounce);
+      pointer-events: auto;
+      max-width: 100%;
+      word-break: break-word;
+    }
+    @keyframes toastSlideUp {
+      from { opacity: 0; transform: translateY(20px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+
+    #confetti-canvas {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100vw;
+      height: 100vh;
+      pointer-events: none;
+      z-index: 1500;
+    }
+
+    /* ================================================================= */
+    /* RESPONSIVE MEDIA QUERIES (1040px, 768px, 480px, 320px)           */
+    /* ================================================================= */
+
+    /* TABLET & SMALL DESKTOP (<= 1040px) */
+    @media (max-width: 1040px) {
+      .workspace-layout {
+        grid-template-columns: 1fr;
+      }
+      .sidebar-card {
+        position: static; /* Unstick on stacked layout */
+        top: auto;
+      }
+      .stats-dashboard-grid {
+        grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+      }
+    }
+
+    /* TABLET BREAKPOINT (<= 768px) */
+    @media (max-width: 768px) {
+      .app-header {
+        flex-direction: column;
+        align-items: stretch;
+      }
+      .header-actions {
+        width: 100%;
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(130px, 1fr));
+        gap: 8px;
+      }
+      .glass-btn {
+        width: 100%;
+        justify-content: center;
+      }
+      .stats-grid {
+        grid-template-columns: repeat(2, 1fr);
+      }
+      .calendar-grid {
+        gap: clamp(3px, 1vw, 6px);
+      }
+      .day-cell {
+        min-height: clamp(48px, 9vw, 64px);
+        padding: 4px;
+      }
+      .day-mood-emoji { font-size: clamp(16px, 3.5vw, 20px); }
+      .day-bottom-row { display: none; } /* Hide label to keep cells clean */
+      .week-summary-bar {
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 8px;
+      }
+      .stats-dashboard-grid {
+        grid-template-columns: 1fr;
+      }
+      .github-scroll-hint {
+        display: block;
+      }
+      .journal-textarea {
+        font-size: 16px; /* Prevents auto-zoom on iOS Safari */
+      }
+      .toast-container {
+        left: 16px;
+        right: 16px;
+        align-items: center;
+      }
+      .toast-pill {
+        justify-content: center;
+        text-align: center;
+      }
+    }
+
+    /* MOBILE BREAKPOINT (<= 480px) */
+    @media (max-width: 480px) {
+      .app-wrapper {
+        padding: 10px 8px 30px;
+        gap: 14px;
+      }
+      .brand-section {
+        width: 100%;
+      }
+      .header-actions {
+        grid-template-columns: repeat(2, 1fr);
+      }
+      .calendar-view-toggle {
+        width: 100%;
+        display: flex;
+      }
+      .toggle-pill {
+        flex: 1;
+        text-align: center;
+      }
+      .calendar-toolbar {
+        flex-direction: column;
+        align-items: stretch;
+      }
+      .month-nav-group {
+        justify-content: space-between;
+        width: 100%;
+      }
+      .calendar-toolbar > div:last-child {
+        display: flex;
+        width: 100%;
+      }
+      .calendar-toolbar > div:last-child button {
+        flex: 1;
+        min-height: 44px;
+      }
+      .calendar-grid {
+        gap: 3px;
+      }
+      .day-cell {
+        min-height: 44px; /* Exact 44px minimum touch target */
+        padding: 2px;
+      }
+      .day-number { font-size: 10px; }
+      .day-mood-emoji { font-size: 16px; }
+      .stats-dashboard-header {
+        flex-direction: column;
+        align-items: stretch;
+      }
+      .stats-timeframe-toggle {
+        width: 100%;
+        display: flex;
+      }
+      .timeframe-btn {
+        flex: 1;
+        text-align: center;
+      }
+      .modal-mood-grid {
+        gap: 4px;
+      }
+      .modal-footer-actions {
+        flex-direction: column-reverse;
+        align-items: stretch;
+      }
+      .modal-footer-actions > div {
+        display: flex;
+        width: 100%;
+        gap: 8px;
+      }
+      .modal-footer-actions button {
+        flex: 1;
+        min-height: 44px;
+      }
+    }
+
+    /* EXTRA SMALL MOBILE BREAKPOINT (<= 360px, e.g. iPhone SE / 320px) */
+    @media (max-width: 360px) {
+      .app-wrapper {
+        padding: 8px 6px 24px;
+      }
+      .header-actions {
+        grid-template-columns: 1fr;
+      }
+      .stats-grid {
+        grid-template-columns: 1fr;
+      }
+      .calendar-card {
+        padding: 8px;
+      }
+      .calendar-grid {
+        gap: 2px;
+      }
+      .day-cell {
+        min-height: 44px;
+        padding: 1px;
+      }
+      .day-mood-emoji { font-size: 14px; }
+      .today-pill-badge { font-size: 6px; padding: 1px 2px; }
+      .mood-options-grid {
+        gap: 3px;
+      }
+      .mood-btn-pill {
+        padding: 6px 1px;
+      }
+      .mood-btn-emoji { font-size: 16px; }
+      .mood-btn-name { font-size: 8px; }
+    }
+  </style>
+</head>
+<body>
+
+  <!-- Fullscreen Canvas for celebratory confetti bursts -->
+  <canvas id="confetti-canvas"></canvas>
+
+  <!-- Global Hover Tooltip for Notes & Moods -->
+  <div id="app-hover-tooltip" class="app-hover-tooltip" aria-hidden="true"></div>
+
+  <!-- Main Root Wrapper -->
+  <div class="app-wrapper">
+
+    <!-- ============================================================= -->
+    <!-- 1. HEADER & GLOBAL CONTROLS                                   -->
+    <!-- ============================================================= -->
+    <header class="app-header">
+      <div class="brand-section">
+        <div class="brand-icon">✨</div>
+        <div>
+          <h1 class="brand-title">Mood Heatmap Journal</h1>
+          <p class="brand-subtitle">Track daily feelings • Click day for notes & reflection</p>
+        </div>
+      </div>
+
+      <div class="header-actions">
+        <!-- Quick Export JSON -->
+        <button id="btn-quick-export" class="glass-btn" title="Download journal data as JSON">
+          <span>📥</span>
+          <span>Export JSON</span>
+        </button>
+
+        <!-- Quick Import JSON -->
+        <label class="glass-btn" title="Restore journal entries from JSON file" style="cursor: pointer;">
+          <span>📤</span>
+          <span>Import JSON</span>
+          <input type="file" id="quick-import-file" accept=".json" style="display: none;">
+        </label>
+
+        <!-- Theme Toggle -->
+        <button id="btn-toggle-theme" class="glass-btn" title="Toggle Dark/Light Mode">
+          <span id="theme-icon">🌙</span>
+          <span id="theme-text">Dark</span>
+        </button>
+
+        <!-- Sound Toggle -->
+        <button id="btn-toggle-sound" class="glass-btn" title="Toggle audio chime feedback">
+          <span id="sound-icon">🔊</span>
+          <span id="sound-text">Sound ON</span>
+        </button>
+
+        <!-- Sample Demo Data -->
+        <button id="btn-demo-data" class="glass-btn" title="Populate realistic demo mood data">
+          <span>✨</span>
+          <span>Sample Data</span>
+        </button>
+
+        <!-- More Data Options Menu -->
+        <button id="btn-data-menu" class="glass-btn" title="More Data & Backup Options">
+          <span>⚙️</span>
+          <span>Options</span>
+        </button>
+      </div>
+    </header>
+
+    <!-- ============================================================= -->
+    <!-- 2. MONTHLY QUICK STATS SUMMARY                                -->
+    <!-- ============================================================= -->
+    <section class="stats-grid">
+      <!-- Current Streak Card -->
+      <div class="stat-card card-streak">
+        <div class="stat-header">
+          <span>Current Streak</span>
+          <span>🔥</span>
+        </div>
+        <div class="stat-value">
+          <span id="stat-streak-val">0</span>
+          <span style="font-size: 14px; font-weight: 600; color: var(--text-muted);">days</span>
+        </div>
+        <div class="stat-subtext" id="stat-streak-sub">Keep the momentum going!</div>
+      </div>
+
+      <!-- Average Mood Score Card -->
+      <div class="stat-card card-avg">
+        <div class="stat-header">
+          <span>Monthly Mood Index</span>
+          <span>📈</span>
+        </div>
+        <div class="stat-value">
+          <span id="stat-avg-val">--</span>
+          <span id="stat-avg-emoji" style="font-size: 22px;"></span>
+        </div>
+        <div class="stat-subtext" id="stat-avg-sub">Based on logged days this month</div>
+      </div>
+
+      <!-- Total Days Logged Card -->
+      <div class="stat-card card-logged">
+        <div class="stat-header">
+          <span>Days Tracked</span>
+          <span>📅</span>
+        </div>
+        <div class="stat-value">
+          <span id="stat-logged-val">0 / 0</span>
+        </div>
+        <div class="stat-subtext" id="stat-logged-sub">0% of month completed</div>
+      </div>
+
+      <!-- Dominant Mood Card -->
+      <div class="stat-card card-dominant">
+        <div class="stat-header">
+          <span>Dominant Mood</span>
+          <span>👑</span>
+        </div>
+        <div class="stat-value">
+          <span id="stat-dominant-val">None</span>
+          <span id="stat-dominant-emoji" style="font-size: 22px;"></span>
+        </div>
+        <div class="stat-subtext" id="stat-dominant-sub">Most frequent mood level</div>
+      </div>
+    </section>
+
+    <!-- ============================================================= -->
+    <!-- 3. VIEW TOGGLE BAR: MONTH CALENDAR vs. GITHUB YEAR HEATMAP   -->
+    <!-- ============================================================= -->
+    <div class="view-toggle-row">
+      <div class="calendar-view-toggle">
+        <!-- Month View Toggle -->
+        <button id="view-tab-month" class="toggle-pill active" onclick="switchView('month')">
+          📅 Month Calendar
+        </button>
+        <!-- GitHub-style Year View Toggle -->
+        <button id="view-tab-year" class="toggle-pill" onclick="switchView('year')">
+          🗺️ Year View (GitHub Heatmap)
+        </button>
+      </div>
+
+      <div class="view-toggle-tip">
+        <span>💡 <strong>Tip:</strong> Click day to write note & choose mood:</span>
+        <span style="color: var(--mood-amazing); font-weight:700;">😄 Amazing</span>
+        <span style="color: var(--mood-good); font-weight:700;">🙂 Good</span>
+        <span style="color: var(--mood-okay); font-weight:700;">😐 Okay</span>
+        <span style="color: var(--mood-bad); font-weight:700;">🙁 Bad</span>
+        <span style="color: var(--mood-terrible); font-weight:700;">😢 Terrible</span>
+      </div>
+    </div>
+
+    <!-- ============================================================= -->
+    <!-- 4. MONTHLY WORKSPACE VIEW (CALENDAR + SIDEBAR INSPECTOR)       -->
+    <!-- ============================================================= -->
+    <div id="month-view-container" class="workspace-layout">
+
+      <!-- LEFT COLUMN: CALENDAR HEATMAP & CONTROLS -->
+      <main class="calendar-card">
+        <!-- Month Navigation Toolbar -->
+        <div class="calendar-toolbar">
+          <div class="month-nav-group">
+            <button id="btn-prev-month" class="nav-arrow-btn" title="Previous Month">❮</button>
+            <div id="current-month-label" class="current-month-display">November 2026</div>
+            <button id="btn-next-month" class="nav-arrow-btn" title="Next Month">❯</button>
+          </div>
+
+          <div style="display: flex; gap: 8px; flex-wrap: wrap;">
+            <button id="btn-today" class="glass-btn" style="padding: 8px 14px; font-size: 12px;">
+              🎯 Today
+            </button>
+            <button id="btn-clear-month" class="glass-btn" style="padding: 8px 14px; font-size: 12px;" title="Reset this month's moods">
+              🔄 Clear Month
+            </button>
+          </div>
+        </div>
+
+        <!-- 7-Column Calendar Grid Wrapper (with Weekly Summary Bars) -->
+        <div class="calendar-grid-wrapper">
+          <div class="calendar-grid" id="calendar-days-container">
+            <!-- Weekday Headers -->
+            <div class="weekday-header">Mon</div>
+            <div class="weekday-header">Tue</div>
+            <div class="weekday-header">Wed</div>
+            <div class="weekday-header">Thu</div>
+            <div class="weekday-header">Fri</div>
+            <div class="weekday-header">Sat</div>
+            <div class="weekday-header">Sun</div>
+
+            <!-- Day cells and Weekly Summary bars populated dynamically -->
+          </div>
+        </div>
+
+        <!-- Interactive Heatmap Legend -->
+        <div class="legend-container">
+          <div class="legend-label">Filter & Legend:</div>
+          <div class="legend-chips" id="legend-chips-container">
+            <!-- Rendered by JS -->
+          </div>
+        </div>
+
+        <!-- Monthly Mood Distribution Stacked Progress Bar -->
+        <div class="breakdown-card">
+          <div class="breakdown-header">
+            <span>Monthly Distribution Ratio</span>
+            <span id="breakdown-logged-text">0 logged days</span>
+          </div>
+          <div class="progress-bar-stack" id="progress-bar-stack">
+            <div class="progress-segment seg-1" style="width: 0%;" title="Amazing"></div>
+            <div class="progress-segment seg-2" style="width: 0%;" title="Good"></div>
+            <div class="progress-segment seg-3" style="width: 0%;" title="Okay"></div>
+            <div class="progress-segment seg-4" style="width: 0%;" title="Bad"></div>
+            <div class="progress-segment seg-5" style="width: 0%;" title="Terrible"></div>
+          </div>
+        </div>
+      </main>
+
+      <!-- RIGHT COLUMN: SELECTED DAY JOURNAL INSPECTOR -->
+      <aside class="sidebar-card">
+        <div class="sidebar-title-row">
+          <div>
+            <h2 id="inspector-date-title" class="selected-date-title">Selected Day</h2>
+            <p id="inspector-date-subtitle" class="selected-date-subtitle">Thursday, Nov 19, 2026</p>
+          </div>
+          <div id="inspector-mood-badge" style="font-size: 28px;">⚪</div>
+        </div>
+
+        <!-- Quick Mood Selector Pills -->
+        <div style="display: flex; flex-direction: column; gap: 8px;">
+          <div class="mood-selector-label">Quick Set Mood:</div>
+          <div class="mood-options-grid">
+            <button class="mood-btn-pill" data-level="1" style="--btn-color: var(--mood-amazing); --btn-bg: var(--mood-amazing-bg); --btn-glow: var(--mood-amazing-glow);" title="Amazing (Bright Green)">
+              <span class="mood-btn-emoji">😄</span>
+              <span class="mood-btn-name">Amazing</span>
+            </button>
+            <button class="mood-btn-pill" data-level="2" style="--btn-color: var(--mood-good); --btn-bg: var(--mood-good-bg); --btn-glow: var(--mood-good-glow);" title="Good (Light Green)">
+              <span class="mood-btn-emoji">🙂</span>
+              <span class="mood-btn-name">Good</span>
+            </button>
+            <button class="mood-btn-pill" data-level="3" style="--btn-color: var(--mood-okay); --btn-bg: var(--mood-okay-bg); --btn-glow: var(--mood-okay-glow);" title="Okay (Yellow)">
+              <span class="mood-btn-emoji">😐</span>
+              <span class="mood-btn-name">Okay</span>
+            </button>
+            <button class="mood-btn-pill" data-level="4" style="--btn-color: var(--mood-bad); --btn-bg: var(--mood-bad-bg); --btn-glow: var(--mood-bad-glow);" title="Bad (Orange)">
+              <span class="mood-btn-emoji">🙁</span>
+              <span class="mood-btn-name">Bad</span>
+            </button>
+            <button class="mood-btn-pill" data-level="5" style="--btn-color: var(--mood-terrible); --btn-bg: var(--mood-terrible-bg); --btn-glow: var(--mood-terrible-glow);" title="Terrible (Red)">
+              <span class="mood-btn-emoji">😢</span>
+              <span class="mood-btn-name">Terrible</span>
+            </button>
+          </div>
+        </div>
+
+        <!-- Daily Reflection Note Input -->
+        <div class="journal-section">
+          <div class="mood-selector-label">Daily Reflection & Notes:</div>
+          <textarea id="journal-note-input" class="journal-textarea" placeholder="What made today feel this way? Highlights, gratitude, or thoughts..."></textarea>
+        </div>
+
+        <!-- Activity & Context Tags -->
+        <div class="tags-section">
+          <div class="mood-selector-label">Context Tags:</div>
+          <div class="tag-chips-wrap" id="tag-chips-wrap">
+            <button class="tag-chip" data-tag="Work">💼 Work</button>
+            <button class="tag-chip" data-tag="Health">🏃 Health</button>
+            <button class="tag-chip" data-tag="Family">❤️ Family</button>
+            <button class="tag-chip" data-tag="Social">👥 Social</button>
+            <button class="tag-chip" data-tag="Sleep">😴 Sleep</button>
+            <button class="tag-chip" data-tag="Hobby">🎨 Hobby</button>
+            <button class="tag-chip" data-tag="Relax">🌿 Relax</button>
+          </div>
+        </div>
+
+        <!-- Actions Row -->
+        <div class="sidebar-actions">
+          <button id="btn-save-note" class="action-btn action-btn-primary">Save Reflection</button>
+          <button id="btn-clear-day" class="action-btn action-btn-danger">Clear Day</button>
+        </div>
+
+        <!-- Motivational Quote Box -->
+        <div class="quote-box" id="daily-quote-box">
+          "Joy is not in things; it is in us." — Richard Wagner
+        </div>
+      </aside>
+    </div>
+
+    <!-- ============================================================= -->
+    <!-- 5. STATISTICS DASHBOARD BELOW CALENDAR                        -->
+    <!-- ============================================================= -->
+    <section class="stats-dashboard-card" id="stats-dashboard">
+      <div class="stats-dashboard-header">
+        <div class="stats-title-group">
+          <span class="stats-title-icon">📊</span>
+          <div>
+            <h2 class="stats-dashboard-title">Statistics & Analytics Dashboard</h2>
+            <p class="stats-dashboard-sub">Mood distribution, average score, streaks, and logging volume</p>
+          </div>
+        </div>
+
+        <div class="stats-timeframe-toggle">
+          <button id="btn-stats-month" class="timeframe-btn active" onclick="setStatsTimeframe('month')">Current Month</button>
+          <button id="btn-stats-all" class="timeframe-btn" onclick="setStatsTimeframe('all')">All Time</button>
+        </div>
+      </div>
+
+      <div class="stats-dashboard-grid">
+        <!-- Donut Chart Card -->
+        <div class="analytics-card donut-card">
+          <h3 class="analytics-card-title">Mood Distribution (Donut Chart)</h3>
+          <div class="donut-chart-wrapper">
+            <canvas id="stats-donut-chart" width="140" height="140"></canvas>
+            <div class="donut-legend" id="donut-legend-container">
+              <!-- Rendered by JS -->
+            </div>
+          </div>
+        </div>
+
+        <!-- Average Score Metric Card -->
+        <div class="analytics-card metric-card">
+          <div class="metric-top">
+            <span>Average Score</span>
+            <span class="metric-icon">📈</span>
+          </div>
+          <div class="metric-main">
+            <span class="metric-big" id="dash-avg-score">--</span>
+            <span class="metric-unit">/ 5.0</span>
+            <span class="metric-sub-badge" id="dash-avg-badge">Balanced</span>
+          </div>
+          <div class="score-bar-track">
+            <div class="score-bar-fill" id="dash-score-bar" style="width: 0%;"></div>
+          </div>
+          <p class="metric-footnote" id="dash-avg-footnote">Computed from tracked daily scores</p>
+        </div>
+
+        <!-- Longest Good Streak Metric Card -->
+        <div class="analytics-card metric-card">
+          <div class="metric-top">
+            <span>Longest Good Streak</span>
+            <span class="metric-icon">🌟</span>
+          </div>
+          <div class="metric-main">
+            <span class="metric-big" id="dash-longest-good-streak">0</span>
+            <span class="metric-unit">days</span>
+          </div>
+          <div class="streak-details-row">
+            <span>Current Good Streak: <strong id="dash-current-good-streak">0</strong> days</span>
+            <span>Longest Tracked Run: <strong id="dash-longest-tracked-streak">0</strong> days</span>
+          </div>
+          <p class="metric-footnote">Consecutive days rated Good or Amazing</p>
+        </div>
+
+        <!-- Total Days Tracked Card -->
+        <div class="analytics-card metric-card">
+          <div class="metric-top">
+            <span>Total Days Tracked</span>
+            <span class="metric-icon">🗓️</span>
+          </div>
+          <div class="metric-main">
+            <span class="metric-big" id="dash-total-days">0</span>
+            <span class="metric-unit">days</span>
+          </div>
+          <div class="streak-details-row">
+            <span>Month Consistency: <strong id="dash-month-consistency">0%</strong></span>
+            <span>All-Time Entries: <strong id="dash-alltime-entries">0</strong></span>
+          </div>
+          <p class="metric-footnote" id="dash-total-footnote">Consistency builds self-awareness</p>
+        </div>
+      </div>
+    </section>
+
+    <!-- ============================================================= -->
+    <!-- 6. GITHUB-STYLE YEAR VIEW HEATMAP                             -->
+    <!-- ============================================================= -->
+    <section id="year-view-container" class="year-view-container">
+      <div class="calendar-toolbar" style="padding: 14px 20px; background: var(--bg-surface); border-radius: var(--radius-lg); border: 1px solid var(--border-subtle);">
+        <div class="month-nav-group">
+          <button id="btn-prev-year" class="nav-arrow-btn" title="Previous Year">❮</button>
+          <div id="current-year-label" class="current-month-display">2026 Year Overview</div>
+          <button id="btn-next-year" class="nav-arrow-btn" title="Next Year">❯</button>
+        </div>
+        <div style="font-size: 13px; color: var(--text-muted);">
+          GitHub-style 52-week contribution heatmap • Click any square to log or view notes
+        </div>
+      </div>
+
+      <!-- GitHub-Style Contribution Heatmap Card -->
+      <div class="github-heatmap-container">
+        <div class="github-scroll-hint">👈 Swipe horizontally to view full year 👉</div>
+        <div class="github-scroll-wrap">
+          <div class="github-graph-inner">
+            <!-- Day of Week Row Labels -->
+            <div class="github-day-labels">
+              <div>Mon</div>
+              <div></div>
+              <div>Wed</div>
+              <div></div>
+              <div>Fri</div>
+              <div></div>
+              <div>Sun</div>
+            </div>
+
+            <!-- Heatmap Weeks Grid with Months Header -->
+            <div class="github-days-and-months">
+              <div class="github-months-row" id="github-months-row">
+                <!-- Months tags positioned by JS -->
+              </div>
+              <div class="github-weeks-grid" id="github-weeks-grid">
+                <!-- 52/53 columns generated by JS -->
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div class="github-footer-row">
+          <div>
+            <span id="github-year-total-text"><strong>0</strong> days logged in 2026</span>
+            <span style="margin: 0 8px;">•</span>
+            <span id="github-year-avg-text">Year Average: <strong>--</strong></span>
+          </div>
+
+          <div class="github-legend">
+            <span>Less</span>
+            <span class="github-cell" data-mood="0" style="display:inline-block; vertical-align:middle;"></span>
+            <span class="github-cell" data-mood="5" style="display:inline-block; vertical-align:middle;"></span>
+            <span class="github-cell" data-mood="4" style="display:inline-block; vertical-align:middle;"></span>
+            <span class="github-cell" data-mood="3" style="display:inline-block; vertical-align:middle;"></span>
+            <span class="github-cell" data-mood="2" style="display:inline-block; vertical-align:middle;"></span>
+            <span class="github-cell" data-mood="1" style="display:inline-block; vertical-align:middle;"></span>
+            <span>More (Amazing)</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- 12 Mini Months Matrix View -->
+      <div style="font-size: 14px; font-weight: 700; color: var(--text-secondary); margin-top: 10px;">
+        📅 12-Month Calendar Breakouts
+      </div>
+      <div class="year-months-grid" id="year-months-grid">
+        <!-- 12 Mini Months rendered here by JS -->
+      </div>
+    </section>
+
+  </div><!-- /app-wrapper -->
+
+  <!-- ============================================================= -->
+  <!-- 7. MOOD NOTES POPUP MODAL (Requirement: centered & responsive) -->
+  <!-- ============================================================= -->
+  <div id="mood-notes-modal" class="modal-backdrop">
+    <div class="modal-dialog">
+      <div class="modal-header">
+        <div>
+          <div style="display: flex; align-items: center; gap: 8px;">
+            <h3 id="modal-note-date-title" class="modal-title">Selected Day</h3>
+            <span id="modal-today-pill" class="today-pill-badge" style="display: none;">TODAY</span>
+          </div>
+          <p id="modal-note-date-sub" style="font-size: 12px; color: var(--text-muted); margin-top: 2px;">
+            Select mood and record your thoughts for this day
+          </p>
+        </div>
+        <button id="btn-close-note-modal" class="modal-close-btn" title="Close (Esc)">✕</button>
+      </div>
+
+      <!-- Mood Selection Buttons -->
+      <div>
+        <label class="modal-section-label">Select Mood:</label>
+        <div class="modal-mood-grid">
+          <button class="modal-mood-btn" data-level="1" style="--mood-btn-color: var(--mood-amazing); --mood-btn-bg: var(--mood-amazing-bg); --mood-btn-glow: var(--mood-amazing-glow);" title="Amazing">
+            <span class="m-emoji">😄</span>
+            <span class="m-label">Amazing</span>
+            <span class="m-score">5 / 5</span>
+          </button>
+          <button class="modal-mood-btn" data-level="2" style="--mood-btn-color: var(--mood-good); --mood-btn-bg: var(--mood-good-bg); --mood-btn-glow: var(--mood-good-glow);" title="Good">
+            <span class="m-emoji">🙂</span>
+            <span class="m-label">Good</span>
+            <span class="m-score">4 / 5</span>
+          </button>
+          <button class="modal-mood-btn" data-level="3" style="--mood-btn-color: var(--mood-okay); --mood-btn-bg: var(--mood-okay-bg); --mood-btn-glow: var(--mood-okay-glow);" title="Okay">
+            <span class="m-emoji">😐</span>
+            <span class="m-label">Okay</span>
+            <span class="m-score">3 / 5</span>
+          </button>
+          <button class="modal-mood-btn" data-level="4" style="--mood-btn-color: var(--mood-bad); --mood-btn-bg: var(--mood-bad-bg); --mood-btn-glow: var(--mood-bad-glow);" title="Bad">
+            <span class="m-emoji">🙁</span>
+            <span class="m-label">Bad</span>
+            <span class="m-score">2 / 5</span>
+          </button>
+          <button class="modal-mood-btn" data-level="5" style="--mood-btn-color: var(--mood-terrible); --mood-btn-bg: var(--mood-terrible-bg); --mood-btn-glow: var(--mood-terrible-glow);" title="Terrible">
+            <span class="m-emoji">😢</span>
+            <span class="m-label">Terrible</span>
+            <span class="m-score">1 / 5</span>
+          </button>
+        </div>
+      </div>
+
+      <!-- Write Short Note Textarea -->
+      <div>
+        <div style="display: flex; justify-content: space-between; align-items: center;">
+          <label class="modal-section-label" for="modal-note-textarea">Short Note & Reflection:</label>
+          <span id="modal-char-counter" style="font-size: 11px; color: var(--text-muted);">0 / 280</span>
+        </div>
+        <textarea id="modal-note-textarea" class="journal-textarea" rows="4" placeholder="What happened today? Highlights, gratitude, struggles, or reflections..."></textarea>
+      </div>
+
+      <!-- Activity Tags in Modal -->
+      <div>
+        <label class="modal-section-label">Context Tags:</label>
+        <div class="tag-chips-wrap" id="modal-tag-chips-wrap">
+          <button class="tag-chip" data-tag="Work">💼 Work</button>
+          <button class="tag-chip" data-tag="Health">🏃 Health</button>
+          <button class="tag-chip" data-tag="Family">❤️ Family</button>
+          <button class="tag-chip" data-tag="Social">👥 Social</button>
+          <button class="tag-chip" data-tag="Sleep">😴 Sleep</button>
+          <button class="tag-chip" data-tag="Hobby">🎨 Hobby</button>
+          <button class="tag-chip" data-tag="Relax">🌿 Relax</button>
+        </div>
+      </div>
+
+      <!-- Modal Footer Actions -->
+      <div class="modal-footer-actions">
+        <button id="btn-modal-clear-day" class="action-btn action-btn-danger" style="flex: 0 0 auto;">Clear Day</button>
+        <div style="display: flex; gap: 8px;">
+          <button id="btn-modal-cancel" class="glass-btn">Cancel</button>
+          <button id="btn-modal-save" class="action-btn action-btn-primary">💾 Save Reflection</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ============================================================= -->
+  <!-- 8. DATA BACKUP & RESTORE MODAL                               -->
+  <!-- ============================================================= -->
+  <div id="data-modal" class="modal-backdrop">
+    <div class="modal-dialog">
+      <div class="modal-header">
+        <h3 class="modal-title">Data & Backup Options</h3>
+        <button id="btn-close-data-modal" class="modal-close-btn">✕</button>
+      </div>
+
+      <p style="font-size: 13px; color: var(--text-muted); line-height: 1.5;">
+        Your mood entries and reflections are stored locally in your browser's <code>localStorage</code>. Export your data to keep a permanent backup or transfer between devices.
+      </p>
+
+      <div style="display: flex; flex-direction: column; gap: 10px;">
+        <button id="btn-export-json" class="glass-btn" style="justify-content: center; padding: 12px;">
+          📥 Download JSON Backup
+        </button>
+
+        <label class="glass-btn" style="justify-content: center; padding: 12px; cursor: pointer;">
+          📤 Restore from JSON File
+          <input type="file" id="import-file-input" accept=".json" style="display: none;">
+        </label>
+
+        <button id="btn-export-csv" class="glass-btn" style="justify-content: center; padding: 12px;">
+          📊 Export as CSV Spreadsheet
+        </button>
+
+        <hr style="border: none; border-top: 1px solid var(--border-subtle); margin: 6px 0;">
+
+        <button id="btn-reset-all" class="glass-btn" style="justify-content: center; padding: 12px; color: var(--mood-terrible); border-color: rgba(239, 68, 68, 0.3);">
+          ⚠️ Reset All Data (Erase Everything)
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Toast Notifications Container -->
+  <div class="toast-container" id="toast-container"></div>
+
+  <!-- ================================================================= -->
+  <!-- EMBEDDED JAVASCRIPT: ARCHITECTURE, STATE, CHARTS & TOUCH LOGIC    -->
+  <!-- ================================================================= -->
+  <script>
+    /**
+     * Mood Heatmap Journal - Core Architecture
+     * Fully responsive across mobile (320px), tablet (768px), and desktop (1024px+).
+     * Touch-friendly with minimum 44px targets and zero horizontal scroll.
+     */
+
+    // 1. MOOD CONFIGURATION
+    const MOODS = {
+      0: { level: 0, key: 'none', label: 'Unlogged', emoji: '⚪', color: 'transparent', glow: 'transparent', score: 0 },
+      1: { level: 1, key: 'amazing', label: 'Amazing', emoji: '😄', color: '#10b981', glow: 'rgba(16, 185, 129, 0.45)', score: 5 },
+      2: { level: 2, key: 'good', label: 'Good', emoji: '🙂', color: '#84cc16', glow: 'rgba(132, 204, 22, 0.45)', score: 4 },
+      3: { level: 3, key: 'okay', label: 'Okay', emoji: '😐', color: '#eab308', glow: 'rgba(234, 179, 8, 0.45)', score: 3 },
+      4: { level: 4, key: 'bad', label: 'Bad', emoji: '🙁', color: '#f97316', glow: 'rgba(249, 115, 22, 0.45)', score: 2 },
+      5: { level: 5, key: 'terrible', label: 'Terrible', emoji: '😢', color: '#ef4444', glow: 'rgba(239, 68, 68, 0.45)', score: 1 }
+    };
+
+    const MONTH_NAMES = [
+      'January', 'February', 'March', 'April', 'May', 'June',
+      'July', 'August', 'September', 'October', 'November', 'December'
+    ];
+
+    const INSPIRATIONAL_QUOTES = [
+      '"Joy is not in things; it is in us." — Richard Wagner',
+      '"Every day may not be good, but there is something good in every day." — Alice Morse Earle',
+      '"Feelings come and go like clouds in a windy sky. Conscious breathing is my anchor." — Thich Nhat Hanh',
+      '"Small steps in the right direction can turn out to be the biggest step of your life." — Unknown',
+      '"Happiness is a direction, not a place." — Sydney J. Harris',
+      '"Difficult roads often lead to beautiful destinations." — Zig Ziglar',
+      '"Be gentle with yourself. You are doing the best you can." — Unknown'
+    ];
+
+    const STORAGE_KEY = 'mood_heatmap_journal_v1';
+
+    // 2. STATE MANAGEMENT
+    const state = {
+      viewYear: new Date().getFullYear(),
+      viewMonth: new Date().getMonth(), // 0-11
+      selectedDateStr: formatDateKey(new Date()),
+      activeView: 'month', // 'month' or 'year'
+      statsTimeframe: 'month', // 'month' or 'all'
+      theme: 'dark',
+      soundEnabled: true,
+      entries: {}, // { "YYYY-MM-DD": { mood: 1-5, note: string, tags: string[] } }
+      activeFilterMood: null,
+
+      // Modal working buffer
+      modalDateStr: null,
+      modalWorkingMood: 0,
+      modalWorkingTags: []
+    };
+
+    function formatDateKey(dateObj) {
+      const y = dateObj.getFullYear();
+      const m = String(dateObj.getMonth() + 1).padStart(2, '0');
+      const d = String(dateObj.getDate()).padStart(2, '0');
+      return `${y}-${m}-${d}`;
+    }
+
+    function parseDateKey(keyStr) {
+      const [y, m, d] = keyStr.split('-').map(Number);
+      return new Date(y, m - 1, d);
+    }
+
+    function escapeHtml(str) {
+      if (!str) return '';
+      return str.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
+    }
+
+    // Touch / Mouse coordinate normalizer
+    function getEventCoordinates(e) {
+      if (e.touches && e.touches.length > 0) {
+        return { x: e.touches[0].clientX, y: e.touches[0].clientY };
+      }
+      if (e.changedTouches && e.changedTouches.length > 0) {
+        return { x: e.changedTouches[0].clientX, y: e.changedTouches[0].clientY };
+      }
+      return { x: e.clientX || window.innerWidth / 2, y: e.clientY || window.innerHeight / 2 };
+    }
+
+    // 3. STORAGE PERSISTENCE
+    function loadSavedState() {
+      try {
+        const raw = localStorage.getItem(STORAGE_KEY);
+        if (raw) {
+          const parsed = JSON.parse(raw);
+          if (parsed.entries) state.entries = parsed.entries;
+          if (parsed.theme) state.theme = parsed.theme;
+          if (typeof parsed.soundEnabled === 'boolean') state.soundEnabled = parsed.soundEnabled;
+        }
+      } catch (err) {
+        console.error('Failed to parse localStorage data:', err);
+      }
+    }
+
+    function saveState() {
+      try {
+        const payload = {
+          entries: state.entries,
+          theme: state.theme,
+          soundEnabled: state.soundEnabled,
+          updatedAt: new Date().toISOString()
+        };
+        localStorage.setItem(STORAGE_KEY, JSON.stringify(payload));
+      } catch (err) {
+        console.error('Failed to save to localStorage:', err);
+        showToast('⚠️ Storage quota exceeded or save error', 'error');
+      }
+    }
+
+    // 4. WEB AUDIO SYNTHESIZER
+    let audioCtx = null;
+    function playMoodSound(moodLevel) {
+      if (!state.soundEnabled) return;
+      try {
+        if (!audioCtx) {
+          const AudioContextClass = window.AudioContext || window.webkitAudioContext;
+          if (AudioContextClass) audioCtx = new AudioContextClass();
+        }
+        if (audioCtx && audioCtx.state === 'suspended') {
+          audioCtx.resume();
+        }
+        if (!audioCtx) return;
+
+        const now = audioCtx.currentTime;
+        const notes = {
+          0: [330],
+          1: [523.25, 659.25, 783.99],  // C5, E5, G5
+          2: [440, 554.37],             // A4, C#5
+          3: [392],                     // G4
+          4: [311.13],                  // Eb4
+          5: [220, 261.63]              // A3, C4
+        };
+
+        const freqs = notes[moodLevel] || [440];
+        freqs.forEach((freq, idx) => {
+          const osc = audioCtx.createOscillator();
+          const gain = audioCtx.createGain();
+
+          osc.type = moodLevel === 1 ? 'triangle' : 'sine';
+          osc.frequency.setValueAtTime(freq, now + idx * 0.04);
+
+          gain.gain.setValueAtTime(0.12, now + idx * 0.04);
+          gain.gain.exponentialRampToValueAtTime(0.001, now + idx * 0.04 + 0.35);
+
+          osc.connect(gain);
+          gain.connect(audioCtx.destination);
+
+          osc.start(now + idx * 0.04);
+          osc.stop(now + idx * 0.04 + 0.36);
+        });
+      } catch (e) {
+        // Audio error silent fallback
+      }
+    }
+
+    // 5. CANVAS CONFETTI ENGINE
+    const canvas = document.getElementById('confetti-canvas');
+    const ctx = canvas.getContext('2d');
+    let confettiParticles = [];
+    let confettiAnimationId = null;
+
+    function resizeCanvas() {
+      canvas.width = window.innerWidth;
+      canvas.height = window.innerHeight;
+    }
+    window.addEventListener('resize', resizeCanvas, { passive: true });
+    window.addEventListener('orientationchange', resizeCanvas, { passive: true });
+    resizeCanvas();
+
+    function triggerConfettiBurst(originX, originY) {
+      const colors = ['#10b981', '#34d399', '#6ee7b7', '#6366f1', '#fbbf24', '#f472b6'];
+      const count = 40;
+
+      for (let i = 0; i < count; i++) {
+        const angle = Math.random() * Math.PI * 2;
+        const velocity = Math.random() * 7 + 3;
+        confettiParticles.push({
+          x: originX || canvas.width / 2,
+          y: originY || canvas.height / 2,
+          vx: Math.cos(angle) * velocity,
+          vy: Math.sin(angle) * velocity - 2,
+          size: Math.random() * 6 + 4,
+          color: colors[Math.floor(Math.random() * colors.length)],
+          rotation: Math.random() * 360,
+          rotationSpeed: (Math.random() - 0.5) * 12,
+          life: 1,
+          decay: Math.random() * 0.02 + 0.015
+        });
+      }
+
+      if (!confettiAnimationId) animateConfetti();
+    }
+
+    function animateConfetti() {
+      ctx.clearRect(0, 0, canvas.width, canvas.height);
+      for (let i = confettiParticles.length - 1; i >= 0; i--) {
+        const p = confettiParticles[i];
+        p.x += p.vx;
+        p.y += p.vy;
+        p.vy += 0.22;
+        p.vx *= 0.98;
+        p.rotation += p.rotationSpeed;
+        p.life -= p.decay;
+
+        if (p.life <= 0) {
+          confettiParticles.splice(i, 1);
+          continue;
+        }
+
+        ctx.save();
+        ctx.globalAlpha = p.life;
+        ctx.translate(p.x, p.y);
+        ctx.rotate((p.rotation * Math.PI) / 180);
+        ctx.fillStyle = p.color;
+        ctx.fillRect(-p.size / 2, -p.size / 2, p.size, p.size);
+        ctx.restore();
+      }
+
+      if (confettiParticles.length > 0) {
+        confettiAnimationId = requestAnimationFrame(animateConfetti);
+      } else {
+        confettiAnimationId = null;
+        ctx.clearRect(0, 0, canvas.width, canvas.height);
+      }
+    }
+
+    // 6. MOOD MUTATIONS
+    function setDayMood(dateStr, moodLevel) {
+      if (!state.entries[dateStr]) {
+        state.entries[dateStr] = { mood: 0, note: '', tags: [] };
+      }
+
+      state.entries[dateStr].mood = moodLevel;
+      state.entries[dateStr].updatedAt = new Date().toISOString();
+
+      if (moodLevel === 0 && !state.entries[dateStr].note && (!state.entries[dateStr].tags || state.entries[dateStr].tags.length === 0)) {
+        delete state.entries[dateStr];
+      }
+
+      saveState();
+      renderAll();
+    }
+
+    function cycleDayMood(dateStr, clickEvent) {
+      const currentEntry = state.entries[dateStr] || {};
+      const currentMood = currentEntry.mood || 0;
+      const nextMood = (currentMood >= 5) ? 0 : currentMood + 1;
+
+      setDayMood(dateStr, nextMood);
+      playMoodSound(nextMood);
+
+      if (nextMood === 1) {
+        const coords = clickEvent ? getEventCoordinates(clickEvent) : { x: window.innerWidth / 2, y: window.innerHeight / 2 };
+        triggerConfettiBurst(coords.x, coords.y);
+      }
+    }
+
+    // 7. CALENDAR & WEEKLY SUMMARY BAR RENDERING
+    function renderCalendar() {
+      const container = document.getElementById('calendar-days-container');
+      const monthLabel = document.getElementById('current-month-label');
+
+      monthLabel.textContent = `${MONTH_NAMES[state.viewMonth]} ${state.viewYear}`;
+
+      // Clear dynamic day cells and weekly bars (keep first 7 weekday headers)
+      while (container.children.length > 7) {
+        container.removeChild(container.lastChild);
+      }
+
+      const todayStr = formatDateKey(new Date());
+      const firstDayOfMonth = new Date(state.viewYear, state.viewMonth, 1);
+      const startingDay = (firstDayOfMonth.getDay() + 6) % 7; // Monday = 0
+      const daysInMonth = new Date(state.viewYear, state.viewMonth + 1, 0).getDate();
+      const daysInPrevMonth = new Date(state.viewYear, state.viewMonth, 0).getDate();
+
+      // Collect all days for this calendar grid view
+      const allCalendarDays = [];
+
+      // 1. Previous month padding
+      for (let i = startingDay - 1; i >= 0; i--) {
+        const prevDayNum = daysInPrevMonth - i;
+        const prevDate = new Date(state.viewYear, state.viewMonth - 1, prevDayNum);
+        allCalendarDays.push({
+          dayNum: prevDayNum,
+          dateKey: formatDateKey(prevDate),
+          isOtherMonth: true
+        });
+      }
+
+      // 2. Current month days
+      for (let day = 1; day <= daysInMonth; day++) {
+        const dObj = new Date(state.viewYear, state.viewMonth, day);
+        allCalendarDays.push({
+          dayNum: day,
+          dateKey: formatDateKey(dObj),
+          isOtherMonth: false
+        });
+      }
+
+      // 3. Next month padding
+      const remaining = (allCalendarDays.length % 7 === 0) ? 0 : 7 - (allCalendarDays.length % 7);
+      for (let i = 1; i <= remaining; i++) {
+        const nextDate = new Date(state.viewYear, state.viewMonth + 1, i);
+        allCalendarDays.push({
+          dayNum: i,
+          dateKey: formatDateKey(nextDate),
+          isOtherMonth: true
+        });
+      }
+
+      // Append days in groups of 7, followed by a Weekly Summary Bar
+      for (let w = 0; w < allCalendarDays.length / 7; w++) {
+        const weekDays = allCalendarDays.slice(w * 7, (w + 1) * 7);
+
+        // Append 7 day cells
+        weekDays.forEach(dayInfo => {
+          const cell = createDayCell(dayInfo.dayNum, dayInfo.dateKey, dayInfo.isOtherMonth, todayStr);
+          container.appendChild(cell);
+        });
+
+        // Append Weekly Summary Bar for this week
+        const summaryBar = createWeeklySummaryBar(w + 1, weekDays);
+        container.appendChild(summaryBar);
+      }
+
+      applyLegendFilterUI();
+    }
+
+    /**
+     * Builds interactive day cell DOM element with Mood Emoji & Today Highlight
+     */
+    function createDayCell(dayNum, dateKey, isOtherMonth, todayStr) {
+      const cell = document.createElement('div');
+      cell.className = 'day-cell';
+      cell.tabIndex = 0;
+      cell.setAttribute('role', 'button');
+      cell.setAttribute('aria-label', `${dateKey}`);
+      cell.dataset.date = dateKey;
+
+      if (isOtherMonth) cell.classList.add('other-month');
+      if (dateKey === todayStr) cell.classList.add('is-today');
+      if (dateKey === state.selectedDateStr) cell.classList.add('is-selected');
+
+      const entry = state.entries[dateKey] || { mood: 0, note: '', tags: [] };
+      const moodInfo = MOODS[entry.mood] || MOODS[0];
+
+      cell.dataset.mood = entry.mood || 0;
+      if (entry.note && entry.note.trim()) {
+        cell.classList.add('has-note');
+      }
+
+      // Inside cell: Number, Today Tag, Note Badge, Prominent Mood Emoji, Label
+      cell.innerHTML = `
+        <div class="day-top-row">
+          <span class="day-number">${dayNum}</span>
+          <div class="day-badges-wrap">
+            ${dateKey === todayStr ? '<span class="today-pill-badge">TODAY</span>' : ''}
+            <span class="day-note-badge" title="Note attached"></span>
+          </div>
+        </div>
+        <div class="day-mood-center">
+          <span class="day-mood-emoji">${entry.mood > 0 ? moodInfo.emoji : ''}</span>
+        </div>
+        <div class="day-bottom-row">
+          <span class="day-mood-label">${entry.mood > 0 ? moodInfo.label : ''}</span>
+        </div>
+      `;
+
+      // Touch & Click Interaction: Open Mood Notes Modal
+      cell.addEventListener('click', (e) => {
+        if (isOtherMonth) {
+          const dObj = parseDateKey(dateKey);
+          state.viewYear = dObj.getFullYear();
+          state.viewMonth = dObj.getMonth();
+        }
+        state.selectedDateStr = dateKey;
+        openMoodNoteModal(dateKey);
+      });
+
+      // Hover Tooltip: Show note & mood details (desktop)
+      cell.addEventListener('mouseenter', (e) => showTooltip(e, dateKey));
+      cell.addEventListener('mousemove', (e) => positionTooltip(e));
+      cell.addEventListener('mouseleave', hideTooltip);
+
+      // Keyboard Accessibility: Enter/Space opens modal, 1-5 sets mood directly
+      cell.addEventListener('keydown', (e) => {
+        if (e.key === 'Enter' || e.key === ' ') {
+          e.preventDefault();
+          state.selectedDateStr = dateKey;
+          openMoodNoteModal(dateKey);
+        } else if (e.key >= '1' && e.key <= '5') {
+          e.preventDefault();
+          state.selectedDateStr = dateKey;
+          setDayMood(dateKey, parseInt(e.key, 10));
+          playMoodSound(parseInt(e.key, 10));
+        } else if (e.key === '0' || e.key === 'Backspace') {
+          e.preventDefault();
+          state.selectedDateStr = dateKey;
+          setDayMood(dateKey, 0);
+          playMoodSound(0);
+        }
+      });
+
+      return cell;
+    }
+
+    /**
+     * Builds Weekly Summary Bar
+     */
+    function createWeeklySummaryBar(weekIndex, weekDays) {
+      const bar = document.createElement('div');
+      bar.className = 'week-summary-bar';
+
+      const firstDate = parseDateKey(weekDays[0].dateKey);
+      const lastDate = parseDateKey(weekDays[6].dateKey);
+      const dateRangeStr = `${firstDate.toLocaleDateString('en-US', { month: 'short', day: 'numeric' })} – ${lastDate.toLocaleDateString('en-US', { month: 'short', day: 'numeric' })}`;
+
+      let loggedCount = 0;
+      let totalScore = 0;
+      let dotsHtml = '';
+
+      weekDays.forEach(d => {
+        const ent = state.entries[d.dateKey];
+        const mood = ent && ent.mood > 0 ? ent.mood : 0;
+        if (mood > 0) {
+          loggedCount++;
+          totalScore += MOODS[mood].score;
+        }
+        const mInfo = MOODS[mood];
+        dotsHtml += `<span class="spectrum-dot" data-mood="${mood}" title="${d.dateKey}: ${mInfo.label}"></span>`;
+      });
+
+      let avgDisplay = '--';
+      let avgEmoji = '';
+      let statusVerdict = 'No logs yet';
+
+      if (loggedCount > 0) {
+        const avg = (totalScore / loggedCount).toFixed(1);
+        avgDisplay = avg;
+        if (avg >= 4.5) { avgEmoji = '😄'; statusVerdict = '✨ Radiant'; }
+        else if (avg >= 3.6) { avgEmoji = '🙂'; statusVerdict = '🌿 Uplifted'; }
+        else if (avg >= 2.6) { avgEmoji = '😐'; statusVerdict = '⚖️ Balanced'; }
+        else if (avg >= 1.8) { avgEmoji = '🙁'; statusVerdict = '🌧️ Low'; }
+        else { avgEmoji = '😢'; statusVerdict = '❤️ Healing'; }
+      }
+
+      bar.innerHTML = `
+        <div class="week-info-left">
+          <span class="week-num-badge">Week ${weekIndex}</span>
+          <span class="week-dates-span">${dateRangeStr}</span>
+        </div>
+        <div class="week-mini-spectrum" title="Mon – Sun mood spectrum">
+          ${dotsHtml}
+        </div>
+        <div class="week-info-right">
+          <span class="week-logged-stat">Logged: <strong>${loggedCount}/7</strong> days</span>
+          <span class="week-avg-stat">Avg: <strong>${avgDisplay}</strong> ${avgEmoji}</span>
+          <span class="week-status-pill">${statusVerdict}</span>
+        </div>
+      `;
+
+      return bar;
+    }
+
+    // 8. HOVER TOOLTIP FOR NOTES & MOODS
+    function showTooltip(e, dateKey) {
+      const tooltip = document.getElementById('app-hover-tooltip');
+      if (!tooltip) return;
+
+      const entry = state.entries[dateKey] || { mood: 0, note: '', tags: [] };
+      const mood = MOODS[entry.mood] || MOODS[0];
+      const dateObj = parseDateKey(dateKey);
+      const dateFormatted = dateObj.toLocaleDateString('en-US', { weekday: 'short', month: 'short', day: 'numeric', year: 'numeric' });
+      const isToday = (dateKey === formatDateKey(new Date()));
+
+      let html = `
+        <div class="tooltip-header">
+          <span class="tooltip-date">${dateFormatted}</span>
+          ${isToday ? '<span class="today-pill-badge" style="display:inline-block;">TODAY</span>' : ''}
+        </div>
+        <div class="tooltip-mood" style="color: ${mood.color !== 'transparent' ? mood.color : 'inherit'}">
+          <span>${mood.emoji}</span>
+          <span>${mood.label}</span>
+          ${entry.mood > 0 ? `<span style="font-size:10px; opacity:0.8;">(${mood.score}/5)</span>` : ''}
+        </div>
+      `;
+
+      if (entry.note && entry.note.trim()) {
+        html += `
+          <div class="tooltip-note">
+            “${escapeHtml(entry.note)}”
+          </div>
+        `;
+      }
+
+      if (entry.tags && entry.tags.length > 0) {
+        html += `
+          <div class="tooltip-tags">
+            ${entry.tags.map(t => `<span class="tooltip-tag-pill">${escapeHtml(t)}</span>`).join('')}
+          </div>
+        `;
+      }
+
+      html += `<div class="tooltip-action-hint">Click to edit mood & note</div>`;
+
+      tooltip.innerHTML = html;
+      tooltip.classList.add('visible');
+      positionTooltip(e);
+    }
+
+    function positionTooltip(e) {
+      const tooltip = document.getElementById('app-hover-tooltip');
+      if (!tooltip || !tooltip.classList.contains('visible')) return;
+
+      const coords = getEventCoordinates(e);
+      const gap = 12;
+      let x = coords.x + gap;
+      let y = coords.y + gap;
+      const rect = tooltip.getBoundingClientRect();
+
+      if (x + rect.width > window.innerWidth - 12) {
+        x = coords.x - rect.width - gap;
+      }
+      if (y + rect.height > window.innerHeight - 12) {
+        y = coords.y - rect.height - gap;
+      }
+      if (x < 12) x = 12;
+      if (y < 12) y = 12;
+
+      tooltip.style.left = `${x}px`;
+      tooltip.style.top = `${y}px`;
+    }
+
+    function hideTooltip() {
+      const tooltip = document.getElementById('app-hover-tooltip');
+      if (tooltip) tooltip.classList.remove('visible');
+    }
+
+    // 9. MOOD NOTES POPUP MODAL CONTROLLER
+    function openMoodNoteModal(dateKey) {
+      state.modalDateStr = dateKey;
+      const entry = state.entries[dateKey] || { mood: 0, note: '', tags: [] };
+      state.modalWorkingMood = entry.mood || 0;
+      state.modalWorkingTags = Array.isArray(entry.tags) ? [...entry.tags] : [];
+
+      const modal = document.getElementById('mood-notes-modal');
+      const dateObj = parseDateKey(dateKey);
+      const titleEl = document.getElementById('modal-note-date-title');
+      const subEl = document.getElementById('modal-note-date-sub');
+      const todayPill = document.getElementById('modal-today-pill');
+      const textarea = document.getElementById('modal-note-textarea');
+      const charCounter = document.getElementById('modal-char-counter');
+
+      const isToday = (dateKey === formatDateKey(new Date()));
+      titleEl.textContent = dateObj.toLocaleDateString('en-US', { weekday: 'long', month: 'short', day: 'numeric', year: 'numeric' });
+      subEl.textContent = isToday ? 'Today (Active Day)' : `Date: ${dateKey}`;
+      todayPill.style.display = isToday ? 'inline-block' : 'none';
+
+      textarea.value = entry.note || '';
+      charCounter.textContent = `${textarea.value.length} / 280`;
+
+      renderModalMoodPills();
+      renderModalTags();
+
+      modal.classList.add('open');
+      hideTooltip();
+      setTimeout(() => textarea.focus(), 100);
+    }
+
+    function closeMoodNoteModal() {
+      document.getElementById('mood-notes-modal').classList.remove('open');
+    }
+
+    function renderModalMoodPills() {
+      document.querySelectorAll('.modal-mood-btn').forEach(btn => {
+        const level = parseInt(btn.dataset.level, 10);
+        btn.classList.toggle('selected', level === state.modalWorkingMood);
+      });
+    }
+
+    function renderModalTags() {
+      document.querySelectorAll('#modal-tag-chips-wrap .tag-chip').forEach(chip => {
+        const tag = chip.dataset.tag;
+        chip.classList.toggle('active', state.modalWorkingTags.includes(tag));
+      });
+    }
+
+    function saveModalNote() {
+      const dateKey = state.modalDateStr;
+      if (!dateKey) return;
+
+      const textarea = document.getElementById('modal-note-textarea');
+      const note = textarea.value.trim();
+
+      if (!state.entries[dateKey]) {
+        state.entries[dateKey] = { mood: 0, note: '', tags: [] };
+      }
+
+      state.entries[dateKey].mood = state.modalWorkingMood;
+      state.entries[dateKey].note = note;
+      state.entries[dateKey].tags = [...state.modalWorkingTags];
+      state.entries[dateKey].updatedAt = new Date().toISOString();
+
+      if (state.modalWorkingMood === 0 && !note && state.modalWorkingTags.length === 0) {
+        delete state.entries[dateKey];
+      }
+
+      saveState();
+      renderAll();
+      closeMoodNoteModal();
+      showToast('💾 Reflection saved successfully!');
+    }
+
+    function clearModalDay() {
+      const dateKey = state.modalDateStr;
+      if (dateKey && state.entries[dateKey]) {
+        delete state.entries[dateKey];
+        saveState();
+        renderAll();
+      }
+      closeMoodNoteModal();
+      showToast('🗑️ Cleared day entry');
+    }
+
+    // 10. STATISTICS DASHBOARD & DONUT CHART (Auto-resize on all viewports)
+    function setStatsTimeframe(timeframe) {
+      state.statsTimeframe = timeframe;
+      document.getElementById('btn-stats-month').classList.toggle('active', timeframe === 'month');
+      document.getElementById('btn-stats-all').classList.toggle('active', timeframe === 'all');
+      renderStatisticsDashboard();
+    }
+
+    function renderStatisticsDashboard() {
+      let entriesToAnalyze = [];
+      const currentYear = state.viewYear;
+      const currentMonth = state.viewMonth;
+      const daysInMonth = new Date(currentYear, currentMonth + 1, 0).getDate();
+
+      if (state.statsTimeframe === 'month') {
+        for (let d = 1; d <= daysInMonth; d++) {
+          const dStr = `${currentYear}-${String(currentMonth + 1).padStart(2, '0')}-${String(d).padStart(2, '0')}`;
+          const ent = state.entries[dStr];
+          if (ent && ent.mood > 0) {
+            entriesToAnalyze.push({ date: dStr, mood: ent.mood });
+          }
+        }
+      } else {
+        // All time
+        Object.keys(state.entries).forEach(dStr => {
+          const ent = state.entries[dStr];
+          if (ent && ent.mood > 0) {
+            entriesToAnalyze.push({ date: dStr, mood: ent.mood });
+          }
+        });
+      }
+
+      // Mood counts & sum
+      const counts = { 1: 0, 2: 0, 3: 0, 4: 0, 5: 0 };
+      let sumScore = 0;
+      entriesToAnalyze.forEach(item => {
+        counts[item.mood]++;
+        sumScore += MOODS[item.mood].score;
+      });
+
+      const totalLogged = entriesToAnalyze.length;
+
+      // 1. Draw Donut Chart (Responsive Canvas)
+      drawDonutChart(counts, totalLogged);
+
+      // 2. Average Score
+      const avgScoreEl = document.getElementById('dash-avg-score');
+      const avgBadgeEl = document.getElementById('dash-avg-badge');
+      const scoreBarEl = document.getElementById('dash-score-bar');
+      const avgFootnote = document.getElementById('dash-avg-footnote');
+
+      if (totalLogged > 0) {
+        const avg = (sumScore / totalLogged).toFixed(1);
+        avgScoreEl.textContent = avg;
+        const pct = ((avg / 5.0) * 100).toFixed(0);
+        scoreBarEl.style.width = `${pct}%`;
+
+        let badgeText = 'Balanced ⚖️';
+        if (avg >= 4.5) badgeText = 'Vibrant 😄';
+        else if (avg >= 3.6) badgeText = 'Uplifted 🙂';
+        else if (avg >= 2.6) badgeText = 'Neutral 😐';
+        else if (avg >= 1.8) badgeText = 'Challenging 🙁';
+        else badgeText = 'Tough 😢';
+
+        avgBadgeEl.textContent = badgeText;
+        avgFootnote.textContent = `Based on ${totalLogged} ${state.statsTimeframe === 'month' ? 'monthly' : 'all-time'} entries`;
+      } else {
+        avgScoreEl.textContent = '--';
+        scoreBarEl.style.width = '0%';
+        avgBadgeEl.textContent = 'No Data';
+        avgFootnote.textContent = 'No mood records in this timeframe';
+      }
+
+      // 3. Longest Good Streak & Longest Tracked Streak
+      const streaks = calculateDetailedStreaks();
+      document.getElementById('dash-longest-good-streak').textContent = streaks.longestGood;
+      document.getElementById('dash-current-good-streak').textContent = streaks.currentGood;
+      document.getElementById('dash-longest-tracked-streak').textContent = streaks.longestLogged;
+
+      // 4. Total Days Tracked Card
+      const monthDaysLogged = getMonthLoggedCount(currentYear, currentMonth);
+      const consistencyPct = Math.round((monthDaysLogged / daysInMonth) * 100);
+      const allTimeCount = Object.keys(state.entries).filter(k => state.entries[k] && state.entries[k].mood > 0).length;
+
+      document.getElementById('dash-total-days').textContent = state.statsTimeframe === 'month' ? monthDaysLogged : allTimeCount;
+      document.getElementById('dash-month-consistency').textContent = `${consistencyPct}%`;
+      document.getElementById('dash-alltime-entries').textContent = allTimeCount;
+
+      // Donut Legend list
+      renderDonutLegend(counts, totalLogged);
+    }
+
+    function getMonthLoggedCount(year, month) {
+      const days = new Date(year, month + 1, 0).getDate();
+      let cnt = 0;
+      for (let d = 1; d <= days; d++) {
+        const key = `${year}-${String(month + 1).padStart(2, '0')}-${String(d).padStart(2, '0')}`;
+        if (state.entries[key] && state.entries[key].mood > 0) cnt++;
+      }
+      return cnt;
+    }
+
+    /**
+     * Draws HTML5 Canvas Donut Chart with Responsive Sizing
+     */
+    function drawDonutChart(counts, total) {
+      const canvasEl = document.getElementById('stats-donut-chart');
+      if (!canvasEl) return;
+      const ctx = canvasEl.getContext('2d');
+      const dpr = window.devicePixelRatio || 1;
+
+      // Dynamic sizing based on viewport
+      const isMobile = window.innerWidth <= 480;
+      const size = isMobile ? 120 : 140;
+
+      canvasEl.width = size * dpr;
+      canvasEl.height = size * dpr;
+      canvasEl.style.width = `${size}px`;
+      canvasEl.style.height = `${size}px`;
+      ctx.scale(dpr, dpr);
+
+      ctx.clearRect(0, 0, size, size);
+
+      const centerX = size / 2;
+      const centerY = size / 2;
+      const outerR = size / 2 - 8;
+      const innerR = outerR * 0.64;
+
+      if (total === 0) {
+        ctx.beginPath();
+        ctx.arc(centerX, centerY, outerR, 0, 2 * Math.PI);
+        ctx.arc(centerX, centerY, innerR, 2 * Math.PI, 0, true);
+        ctx.fillStyle = state.theme === 'light' ? 'rgba(0,0,0,0.06)' : 'rgba(255,255,255,0.06)';
+        ctx.fill();
+
+        ctx.fillStyle = state.theme === 'light' ? '#64748b' : '#94a3b8';
+        ctx.font = '600 11px ' + getComputedStyle(document.body).fontFamily;
+        ctx.textAlign = 'center';
+        ctx.textBaseline = 'middle';
+        ctx.fillText('No Logs', centerX, centerY);
+        return;
+      }
+
+      let startAngle = -Math.PI / 2;
+      const gap = total > 1 ? 0.04 : 0;
+
+      for (let lvl = 1; lvl <= 5; lvl++) {
+        const count = counts[lvl] || 0;
+        if (count === 0) continue;
+
+        const sliceAngle = (count / total) * (2 * Math.PI);
+        const endAngle = startAngle + sliceAngle - gap;
+
+        ctx.beginPath();
+        ctx.arc(centerX, centerY, outerR, startAngle, endAngle);
+        ctx.arc(centerX, centerY, innerR, endAngle, startAngle, true);
+        ctx.closePath();
+        ctx.fillStyle = MOODS[lvl].color;
+        ctx.shadowColor = MOODS[lvl].color;
+        ctx.shadowBlur = 4;
+        ctx.fill();
+        ctx.shadowBlur = 0;
+
+        startAngle += sliceAngle;
+      }
+
+      // Center Text
+      ctx.fillStyle = state.theme === 'light' ? '#0f172a' : '#f8fafc';
+      ctx.font = '800 18px ' + getComputedStyle(document.body).fontFamily;
+      ctx.textAlign = 'center';
+      ctx.textBaseline = 'middle';
+      ctx.fillText(total.toString(), centerX, centerY - 6);
+
+      ctx.fillStyle = state.theme === 'light' ? '#64748b' : '#94a3b8';
+      ctx.font = '700 9px ' + getComputedStyle(document.body).fontFamily;
+      ctx.fillText('DAYS', centerX, centerY + 12);
+    }
+
+    function renderDonutLegend(counts, total) {
+      const container = document.getElementById('donut-legend-container');
+      container.innerHTML = '';
+
+      for (let lvl = 1; lvl <= 5; lvl++) {
+        const mood = MOODS[lvl];
+        const count = counts[lvl] || 0;
+        const pct = total > 0 ? Math.round((count / total) * 100) : 0;
+
+        const row = document.createElement('div');
+        row.className = 'donut-legend-item';
+        row.innerHTML = `
+          <div style="display: flex; align-items: center;">
+            <span class="donut-swatch" style="background: ${mood.color};"></span>
+            <span>${mood.emoji} ${mood.label}</span>
+          </div>
+          <div><strong>${count}</strong> <span style="color: var(--text-muted); font-size: 10px;">(${pct}%)</span></div>
+        `;
+        container.appendChild(row);
+      }
+    }
+
+    /**
+     * Calculates Longest Good Streak and Longest Logged Streak
+     */
+    function calculateDetailedStreaks() {
+      const dates = Object.keys(state.entries)
+        .filter(k => state.entries[k] && state.entries[k].mood > 0)
+        .sort();
+
+      if (dates.length === 0) {
+        return { longestGood: 0, currentGood: 0, longestLogged: 0, currentLogged: 0 };
+      }
+
+      const minDate = parseDateKey(dates[0]);
+      const maxDate = new Date();
+      const lastEntryDate = parseDateKey(dates[dates.length - 1]);
+      const endDate = maxDate > lastEntryDate ? maxDate : lastEntryDate;
+
+      let longestGood = 0;
+      let currGoodRun = 0;
+      let longestLogged = 0;
+      let currLoggedRun = 0;
+
+      let curr = new Date(minDate.getFullYear(), minDate.getMonth(), minDate.getDate());
+      const end = new Date(endDate.getFullYear(), endDate.getMonth(), endDate.getDate());
+
+      while (curr <= end) {
+        const key = formatDateKey(curr);
+        const ent = state.entries[key];
+        const mood = ent ? ent.mood : 0;
+
+        if (mood === 1 || mood === 2) {
+          currGoodRun++;
+          if (currGoodRun > longestGood) longestGood = currGoodRun;
+        } else {
+          currGoodRun = 0;
+        }
+
+        if (mood > 0) {
+          currLoggedRun++;
+          if (currLoggedRun > longestLogged) longestLogged = currLoggedRun;
+        } else {
+          currLoggedRun = 0;
+        }
+
+        curr.setDate(curr.getDate() + 1);
+      }
+
+      // Current Good Streak ending today or yesterday
+      let currentGood = 0;
+      let checkDate = new Date();
+      let todayKey = formatDateKey(checkDate);
+      if (!state.entries[todayKey] || (state.entries[todayKey].mood !== 1 && state.entries[todayKey].mood !== 2)) {
+        checkDate.setDate(checkDate.getDate() - 1);
+      }
+      while (true) {
+        const key = formatDateKey(checkDate);
+        const ent = state.entries[key];
+        if (ent && (ent.mood === 1 || ent.mood === 2)) {
+          currentGood++;
+          checkDate.setDate(checkDate.getDate() - 1);
+        } else {
+          break;
+        }
+      }
+
+      return {
+        longestGood,
+        currentGood,
+        longestLogged,
+        currentLogged: calculateStreak()
+      };
+    }
+
+    function calculateStreak() {
+      let streak = 0;
+      const today = new Date();
+      let checkDate = new Date(today.getFullYear(), today.getMonth(), today.getDate());
+
+      const todayKey = formatDateKey(checkDate);
+      if (!state.entries[todayKey] || state.entries[todayKey].mood === 0) {
+        checkDate.setDate(checkDate.getDate() - 1);
+      }
+
+      while (true) {
+        const key = formatDateKey(checkDate);
+        const entry = state.entries[key];
+        if (entry && entry.mood > 0) {
+          streak++;
+          checkDate.setDate(checkDate.getDate() - 1);
+        } else {
+          break;
+        }
+      }
+      return streak;
+    }
+
+    // 11. GITHUB-STYLE YEAR VIEW HEATMAP (Horizontal touch-scrollable)
+    function renderYearHeatmap() {
+      const yearLabel = document.getElementById('current-year-label');
+      yearLabel.textContent = `${state.viewYear} Year Heatmap`;
+
+      const weeksGrid = document.getElementById('github-weeks-grid');
+      const monthsRow = document.getElementById('github-months-row');
+      weeksGrid.innerHTML = '';
+      monthsRow.innerHTML = '';
+
+      const todayStr = formatDateKey(new Date());
+      const year = state.viewYear;
+
+      // Build 52-53 weeks array for the entire year
+      const isLeap = (year % 4 === 0 && year % 100 !== 0) || (year % 400 === 0);
+      const totalDays = isLeap ? 366 : 365;
+
+      const weeks = [];
+      let currentWeek = new Array(7).fill(null);
+      const monthPositions = {}; // monthIndex -> column index
+
+      for (let dayOfYear = 1; dayOfYear <= totalDays; dayOfYear++) {
+        const dObj = new Date(year, 0, dayOfYear);
+        const weekday = (dObj.getDay() + 6) % 7; // Monday = 0
+        const dateKey = formatDateKey(dObj);
+
+        // Record first week column where a month begins
+        const mIdx = dObj.getMonth();
+        if (dObj.getDate() === 1) {
+          monthPositions[mIdx] = weeks.length;
+        }
+
+        currentWeek[weekday] = dateKey;
+
+        if (weekday === 6 || dayOfYear === totalDays) {
+          weeks.push(currentWeek);
+          currentWeek = new Array(7).fill(null);
+        }
+      }
+
+      // Render Month Headers along top
+      const colWidth = 16; // 13px cell + 3px gap
+      for (let m = 0; m < 12; m++) {
+        if (monthPositions[m] !== undefined) {
+          const tag = document.createElement('span');
+          tag.className = 'github-month-tag';
+          tag.textContent = MONTH_NAMES[m].substring(0, 3);
+          tag.style.left = `${monthPositions[m] * colWidth}px`;
+          monthsRow.appendChild(tag);
+        }
+      }
+
+      let yearLoggedCount = 0;
+      let yearScoreSum = 0;
+
+      // Render Columns
+      weeks.forEach(week => {
+        const col = document.createElement('div');
+        col.className = 'github-week-col';
+
+        week.forEach(dateKey => {
+          const cell = document.createElement('div');
+          cell.className = 'github-cell';
+
+          if (!dateKey) {
+            cell.classList.add('empty-pad');
+          } else {
+            const entry = state.entries[dateKey] || { mood: 0 };
+            cell.dataset.date = dateKey;
+            cell.dataset.mood = entry.mood;
+
+            if (entry.mood > 0) {
+              yearLoggedCount++;
+              yearScoreSum += MOODS[entry.mood].score;
+            }
+
+            if (dateKey === todayStr) {
+              cell.classList.add('is-today');
+            }
+
+            // Click opens Mood Notes Modal
+            cell.addEventListener('click', (e) => {
+              state.selectedDateStr = dateKey;
+              openMoodNoteModal(dateKey);
+            });
+
+            // Hover Tooltip
+            cell.addEventListener('mouseenter', (e) => showTooltip(e, dateKey));
+            cell.addEventListener('mousemove', (e) => positionTooltip(e));
+            cell.addEventListener('mouseleave', hideTooltip);
+          }
+
+          col.appendChild(cell);
+        });
+
+        weeksGrid.appendChild(col);
+      });
+
+      // Update Year Summary Footer
+      const yearPct = Math.round((yearLoggedCount / totalDays) * 100);
+      document.getElementById('github-year-total-text').innerHTML = `<strong>${yearLoggedCount}</strong> of ${totalDays} days tracked (${yearPct}%)`;
+
+      if (yearLoggedCount > 0) {
+        const avg = (yearScoreSum / yearLoggedCount).toFixed(1);
+        document.getElementById('github-year-avg-text').innerHTML = `Year Average: <strong>${avg} / 5.0</strong>`;
+      } else {
+        document.getElementById('github-year-avg-text').innerHTML = `Year Average: <strong>--</strong>`;
+      }
+
+      // Also render 12-Mini Months breakouts
+      render12MiniMonths();
+    }
+
+    function render12MiniMonths() {
+      const grid = document.getElementById('year-months-grid');
+      grid.innerHTML = '';
+
+      for (let m = 0; m < 12; m++) {
+        const card = document.createElement('div');
+        card.className = 'mini-month-card';
+
+        const firstDay = new Date(state.viewYear, m, 1);
+        const startPad = (firstDay.getDay() + 6) % 7;
+        const daysInMonth = new Date(state.viewYear, m + 1, 0).getDate();
+
+        let monthCellsHTML = '';
+        for (let p = 0; p < startPad; p++) {
+          monthCellsHTML += `<div class="mini-day-cell empty-pad"></div>`;
+        }
+
+        for (let d = 1; d <= daysInMonth; d++) {
+          const dateStr = `${state.viewYear}-${String(m + 1).padStart(2, '0')}-${String(d).padStart(2, '0')}`;
+          const entry = state.entries[dateStr] || { mood: 0 };
+          const moodInfo = MOODS[entry.mood] || MOODS[0];
+
+          monthCellsHTML += `
+            <div class="mini-day-cell" data-date="${dateStr}" data-mood="${entry.mood}" title="${dateStr}: ${moodInfo.label}"></div>
+          `;
+        }
+
+        card.innerHTML = `
+          <div class="mini-month-header">
+            <span>${MONTH_NAMES[m]}</span>
+            <button class="glass-btn" style="padding: 4px 10px; font-size: 11px; min-height: 36px;" onclick="jumpToMonth(${m})">Open ↗</button>
+          </div>
+          <div class="mini-grid">
+            ${monthCellsHTML}
+          </div>
+        `;
+
+        card.addEventListener('click', (e) => {
+          const dayTarget = e.target.closest('.mini-day-cell');
+          if (dayTarget && !dayTarget.classList.contains('empty-pad')) {
+            const dateStr = dayTarget.dataset.date;
+            openMoodNoteModal(dateStr);
+          }
+        });
+
+        grid.appendChild(card);
+      }
+    }
+
+    function jumpToMonth(mIndex) {
+      state.viewMonth = mIndex;
+      switchView('month');
+      renderAll();
+    }
+
+    function switchView(viewName) {
+      state.activeView = viewName;
+      const monthView = document.getElementById('month-view-container');
+      const yearView = document.getElementById('year-view-container');
+      const monthTab = document.getElementById('view-tab-month');
+      const yearTab = document.getElementById('view-tab-year');
+
+      if (viewName === 'year') {
+        monthView.style.display = 'none';
+        yearView.classList.add('active');
+        monthTab.classList.remove('active');
+        yearTab.classList.add('active');
+        renderYearHeatmap();
+      } else {
+        monthView.style.display = '';
+        yearView.classList.remove('active');
+        monthTab.classList.add('active');
+        yearTab.classList.remove('active');
+        renderCalendar();
+      }
+      renderStatisticsDashboard();
+    }
+
+    // 12. SIDEBAR JOURNAL & INSPECTOR
+    function renderDayInspector(dateStr) {
+      if (!dateStr) dateStr = state.selectedDateStr;
+      const dateObj = parseDateKey(dateStr);
+      const titleEl = document.getElementById('inspector-date-title');
+      const subtitleEl = document.getElementById('inspector-date-subtitle');
+      const badgeEl = document.getElementById('inspector-mood-badge');
+      const textarea = document.getElementById('journal-note-input');
+      const tagChips = document.querySelectorAll('#tag-chips-wrap .tag-chip');
+      const moodPills = document.querySelectorAll('.mood-btn-pill');
+
+      titleEl.textContent = dateObj.toLocaleDateString('en-US', { weekday: 'long', year: 'numeric', month: 'short', day: 'numeric' });
+      const isToday = (dateStr === formatDateKey(new Date()));
+      subtitleEl.textContent = isToday ? 'Today (Active Day)' : `Date: ${dateStr}`;
+
+      const entry = state.entries[dateStr] || { mood: 0, note: '', tags: [] };
+      const moodInfo = MOODS[entry.mood] || MOODS[0];
+
+      badgeEl.textContent = moodInfo.emoji;
+      textarea.value = entry.note || '';
+
+      moodPills.forEach(pill => {
+        const level = parseInt(pill.dataset.level, 10);
+        pill.classList.toggle('selected', level === entry.mood);
+      });
+
+      tagChips.forEach(chip => {
+        const tag = chip.dataset.tag;
+        chip.classList.toggle('active', entry.tags && entry.tags.includes(tag));
+      });
+
+      document.querySelectorAll('.day-cell').forEach(cell => {
+        cell.classList.toggle('is-selected', cell.dataset.date === dateStr);
+      });
+    }
+
+    // 13. TOP STATS CARDS & LEGEND
+    function renderTopStats() {
+      const currentYear = state.viewYear;
+      const currentMonth = state.viewMonth;
+      const daysInMonth = new Date(currentYear, currentMonth + 1, 0).getDate();
+
+      let loggedDaysCount = 0;
+      let scoreSum = 0;
+      const moodCounts = { 1: 0, 2: 0, 3: 0, 4: 0, 5: 0 };
+
+      for (let day = 1; day <= daysInMonth; day++) {
+        const dStr = `${currentYear}-${String(currentMonth + 1).padStart(2, '0')}-${String(day).padStart(2, '0')}`;
+        const entry = state.entries[dStr];
+        if (entry && entry.mood > 0) {
+          loggedDaysCount++;
+          scoreSum += MOODS[entry.mood].score;
+          moodCounts[entry.mood]++;
+        }
+      }
+
+      // Streak
+      const currentStreak = calculateStreak();
+      document.getElementById('stat-streak-val').textContent = currentStreak;
+      document.getElementById('stat-streak-sub').textContent = currentStreak > 0 
+        ? `${currentStreak} day${currentStreak > 1 ? 's' : ''} in a row!`
+        : 'Log today to start a streak!';
+
+      // Logged Days
+      const percentage = Math.round((loggedDaysCount / daysInMonth) * 100);
+      document.getElementById('stat-logged-val').textContent = `${loggedDaysCount} / ${daysInMonth}`;
+      document.getElementById('stat-logged-sub').textContent = `${percentage}% of ${MONTH_NAMES[currentMonth]} logged`;
+
+      // Average Mood Index
+      if (loggedDaysCount > 0) {
+        const avgScore = (scoreSum / loggedDaysCount).toFixed(1);
+        document.getElementById('stat-avg-val').textContent = `${avgScore} / 5.0`;
+
+        let emoji = '😐';
+        let label = 'Balanced';
+        if (avgScore >= 4.5) { emoji = '😄'; label = 'Vibrant & Amazing'; }
+        else if (avgScore >= 3.6) { emoji = '🙂'; label = 'Mostly Good'; }
+        else if (avgScore >= 2.6) { emoji = '😐'; label = 'Neutral / Okay'; }
+        else if (avgScore >= 1.8) { emoji = '🙁'; label = 'Challenging'; }
+        else { emoji = '😢'; label = 'Tough Month'; }
+
+        document.getElementById('stat-avg-emoji').textContent = emoji;
+        document.getElementById('stat-avg-sub').textContent = label;
+      } else {
+        document.getElementById('stat-avg-val').textContent = '--';
+        document.getElementById('stat-avg-emoji').textContent = '';
+        document.getElementById('stat-avg-sub').textContent = 'No logs this month yet';
+      }
+
+      // Dominant Mood
+      let maxCount = 0;
+      let dominantMoodLevel = 0;
+      for (let lvl = 1; lvl <= 5; lvl++) {
+        if (moodCounts[lvl] > maxCount) {
+          maxCount = moodCounts[lvl];
+          dominantMoodLevel = lvl;
+        }
+      }
+
+      if (dominantMoodLevel > 0 && maxCount > 0) {
+        const dom = MOODS[dominantMoodLevel];
+        document.getElementById('stat-dominant-val').textContent = dom.label;
+        document.getElementById('stat-dominant-emoji').textContent = dom.emoji;
+        document.getElementById('stat-dominant-sub').textContent = `${maxCount} day${maxCount > 1 ? 's' : ''} (${Math.round((maxCount / loggedDaysCount) * 100)}%)`;
+      } else {
+        document.getElementById('stat-dominant-val').textContent = 'None';
+        document.getElementById('stat-dominant-emoji').textContent = '';
+        document.getElementById('stat-dominant-sub').textContent = 'Awaiting daily entries';
+      }
+
+      // Monthly Progress Stacked Breakdown Bar
+      updateDistributionBar(moodCounts, loggedDaysCount);
+    }
+
+    function updateDistributionBar(counts, total) {
+      document.getElementById('breakdown-logged-text').textContent = `${total} logged days this month`;
+      for (let lvl = 1; lvl <= 5; lvl++) {
+        const seg = document.querySelector(`.progress-segment.seg-${lvl}`);
+        if (seg) {
+          const pct = total > 0 ? (counts[lvl] / total) * 100 : 0;
+          seg.style.width = `${pct}%`;
+          seg.title = `${MOODS[lvl].label}: ${counts[lvl]} days (${Math.round(pct)}%)`;
+        }
+      }
+    }
+
+    function renderLegend() {
+      const container = document.getElementById('legend-chips-container');
+      container.innerHTML = '';
+
+      const currentYear = state.viewYear;
+      const currentMonth = state.viewMonth;
+      const daysInMonth = new Date(currentYear, currentMonth + 1, 0).getDate();
+      const counts = { 1: 0, 2: 0, 3: 0, 4: 0, 5: 0 };
+
+      for (let day = 1; day <= daysInMonth; day++) {
+        const dStr = `${currentYear}-${String(currentMonth + 1).padStart(2, '0')}-${String(day).padStart(2, '0')}`;
+        const entry = state.entries[dStr];
+        if (entry && entry.mood > 0) counts[entry.mood]++;
+      }
+
+      for (let lvl = 1; lvl <= 5; lvl++) {
+        const mood = MOODS[lvl];
+        const chip = document.createElement('div');
+        chip.className = 'legend-chip';
+        chip.style.setProperty('--chip-color', mood.color);
+        chip.style.setProperty('--chip-glow', mood.glow);
+
+        chip.innerHTML = `
+          <span class="legend-swatch"></span>
+          <span>${mood.emoji} ${mood.label}</span>
+          <span class="legend-count">${counts[lvl]}</span>
+        `;
+
+        chip.addEventListener('mouseenter', () => {
+          state.activeFilterMood = lvl;
+          applyLegendFilterUI();
+        });
+
+        chip.addEventListener('mouseleave', () => {
+          state.activeFilterMood = null;
+          applyLegendFilterUI();
+        });
+
+        container.appendChild(chip);
+      }
+    }
+
+    function applyLegendFilterUI() {
+      const grid = document.getElementById('calendar-days-container');
+      const cells = grid.querySelectorAll('.day-cell');
+
+      if (state.activeFilterMood === null) {
+        grid.classList.remove('filtering');
+        cells.forEach(c => c.classList.remove('filter-matched'));
+      } else {
+        grid.classList.add('filtering');
+        cells.forEach(c => {
+          const match = parseInt(c.dataset.mood, 10) === state.activeFilterMood;
+          c.classList.toggle('filter-matched', match);
+        });
+      }
+    }
+
+    // 14. DYNAMIC FAVICON
+    function updateDynamicFavicon() {
+      const todayStr = formatDateKey(new Date());
+      const entry = state.entries[todayStr];
+      const emoji = (entry && entry.mood > 0) ? MOODS[entry.mood].emoji : '🗓️';
+      const favicon = document.getElementById('app-favicon');
+      favicon.href = `data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>${emoji}</text></svg>`;
+    }
+
+    // 15. TOAST NOTIFICATIONS
+    function showToast(message, type = 'info') {
+      const container = document.getElementById('toast-container');
+      const toast = document.createElement('div');
+      toast.className = 'toast-pill';
+      toast.innerHTML = `<span>${type === 'error' ? '❌' : '✨'}</span> <span>${message}</span>`;
+      container.appendChild(toast);
+
+      setTimeout(() => {
+        toast.style.transition = 'opacity 0.3s, transform 0.3s';
+        toast.style.opacity = '0';
+        toast.style.transform = 'translateY(10px)';
+        setTimeout(() => toast.remove(), 300);
+      }, 3000);
+    }
+
+    // 16. EXPORT / IMPORT CONTROLLERS
+    function exportJSON() {
+      const dataStr = "data:text/json;charset=utf-8," + encodeURIComponent(JSON.stringify(state.entries, null, 2));
+      const downloadAnchor = document.createElement('a');
+      downloadAnchor.setAttribute("href", dataStr);
+      downloadAnchor.setAttribute("download", `mood-heatmap-journal-${formatDateKey(new Date())}.json`);
+      document.body.appendChild(downloadAnchor);
+      downloadAnchor.click();
+      downloadAnchor.remove();
+      showToast('📥 Backup JSON downloaded successfully!');
+    }
+
+    function exportCSV() {
+      let csvContent = "data:text/csv;charset=utf-8,Date,MoodLevel,MoodName,Score,Tags,Notes\n";
+      const sortedKeys = Object.keys(state.entries).sort();
+
+      sortedKeys.forEach(dateKey => {
+        const item = state.entries[dateKey];
+        if (item && item.mood > 0) {
+          const mood = MOODS[item.mood];
+          const tags = (item.tags || []).join('; ');
+          const noteEscaped = `"${(item.note || '').replace(/"/g, '""')}"`;
+          csvContent += `${dateKey},${item.mood},${mood.label},${mood.score},"${tags}",${noteEscaped}\n`;
+        }
+      });
+
+      const encodedUri = encodeURI(csvContent);
+      const link = document.createElement("a");
+      link.setAttribute("href", encodedUri);
+      link.setAttribute("download", `mood-heatmap-export-${formatDateKey(new Date())}.csv`);
+      document.body.appendChild(link);
+      link.click();
+      link.remove();
+      showToast('📊 CSV spreadsheet exported!');
+    }
+
+    function importJSONFile(file) {
+      if (!file) return;
+      const reader = new FileReader();
+      reader.onload = function(e) {
+        try {
+          const imported = JSON.parse(e.target.result);
+          if (typeof imported === 'object' && imported !== null) {
+            state.entries = imported;
+            saveState();
+            renderAll();
+            showToast('📤 Backup successfully restored!');
+            closeDataModal();
+          } else {
+            throw new Error('Invalid JSON structure');
+          }
+        } catch (err) {
+          showToast('❌ Invalid JSON backup file', 'error');
+        }
+      };
+      reader.readAsText(file);
+    }
+
+    function clearMonthEntries() {
+      if (!confirm(`Are you sure you want to clear all mood logs for ${MONTH_NAMES[state.viewMonth]} ${state.viewYear}?`)) {
+        return;
+      }
+      const daysInMonth = new Date(state.viewYear, state.viewMonth + 1, 0).getDate();
+      for (let d = 1; d <= daysInMonth; d++) {
+        const dStr = `${state.viewYear}-${String(state.viewMonth + 1).padStart(2, '0')}-${String(d).padStart(2, '0')}`;
+        delete state.entries[dStr];
+      }
+      saveState();
+      renderAll();
+      showToast(`🔄 Cleared entries for ${MONTH_NAMES[state.viewMonth]}`);
+    }
+
+    function resetAllData() {
+      if (!confirm("⚠️ DANGER: This will delete ALL mood records, reflections, and streaks permanently. Are you absolutely sure?")) {
+        return;
+      }
+      state.entries = {};
+      saveState();
+      renderAll();
+      closeDataModal();
+      showToast('⚠️ All journal data has been erased.', 'error');
+    }
+
+    function openDataModal() {
+      document.getElementById('data-modal').classList.add('open');
+    }
+
+    function closeDataModal() {
+      document.getElementById('data-modal').classList.remove('open');
+    }
+
+    // 17. SAMPLE DEMO DATA GENERATOR
+    function populateDemoData() {
+      const currentYear = state.viewYear;
+      const currentMonth = state.viewMonth;
+      const daysInMonth = new Date(currentYear, currentMonth + 1, 0).getDate();
+
+      const sampleNotes = [
+        "Productive morning run and finished key project milestones!",
+        "Feeling balanced and grateful for peaceful family time.",
+        "A bit fatigued from work, relaxed with a good book.",
+        "Fun evening with close friends, lots of laughter!",
+        "Challenging meeting today, took a long evening walk to reset.",
+        "Energizing workout and wonderfully restful sleep.",
+        "Quiet reflective Sunday, organized my workspace and read."
+      ];
+
+      const sampleTags = [
+        ["Health", "Work"],
+        ["Family", "Social"],
+        ["Relax", "Sleep"],
+        ["Social", "Hobby"],
+        ["Work"],
+        ["Health", "Sleep"],
+        ["Relax", "Hobby"]
+      ];
+
+      for (let d = 1; d <= daysInMonth; d++) {
+        const dateStr = `${currentYear}-${String(currentMonth + 1).padStart(2, '0')}-${String(d).padStart(2, '0')}`;
+        const rand = Math.random();
+        let mood = 2;
+        if (rand < 0.28) mood = 1;
+        else if (rand < 0.60) mood = 2;
+        else if (rand < 0.80) mood = 3;
+        else if (rand < 0.92) mood = 4;
+        else mood = 5;
+
+        const noteIndex = Math.floor(Math.random() * sampleNotes.length);
+        const hasNote = Math.random() > 0.45;
+
+        state.entries[dateStr] = {
+          mood: mood,
+          note: hasNote ? sampleNotes[noteIndex] : '',
+          tags: hasNote ? sampleTags[noteIndex] : [],
+          updatedAt: new Date().toISOString()
+        };
+      }
+
+      saveState();
+      renderAll();
+      showToast('✨ Realistic demo data generated for this month!');
+    }
+
+    // 18. THEME & AUDIO TOGGLES
+    function toggleTheme() {
+      state.theme = state.theme === 'dark' ? 'light' : 'dark';
+      document.documentElement.setAttribute('data-theme', state.theme);
+
+      const themeText = document.getElementById('theme-text');
+      const themeIcon = document.getElementById('theme-icon');
+      if (state.theme === 'dark') {
+        themeText.textContent = 'Dark';
+        themeIcon.textContent = '🌙';
+      } else {
+        themeText.textContent = 'Light';
+        themeIcon.textContent = '☀️';
+      }
+      saveState();
+      renderStatisticsDashboard();
+    }
+
+    function toggleSound() {
+      state.soundEnabled = !state.soundEnabled;
+      const soundText = document.getElementById('sound-text');
+      const soundIcon = document.getElementById('sound-icon');
+      if (state.soundEnabled) {
+        soundText.textContent = 'Sound ON';
+        soundIcon.textContent = '🔊';
+        playMoodSound(1);
+      } else {
+        soundText.textContent = 'Sound OFF';
+        soundIcon.textContent = '🔇';
+      }
+      saveState();
+    }
+
+    // 19. MASTER RENDER ALL
+    function renderAll() {
+      renderCalendar();
+      renderTopStats();
+      renderLegend();
+      renderDayInspector(state.selectedDateStr);
+      renderStatisticsDashboard();
+      updateDynamicFavicon();
+      if (state.activeView === 'year') {
+        renderYearHeatmap();
+      }
+    }
+
+    // 20. INITIALIZATION & EVENT BINDINGS
+    document.addEventListener('DOMContentLoaded', () => {
+      loadSavedState();
+
+      // Set initial Theme
+      document.documentElement.setAttribute('data-theme', state.theme);
+      if (state.theme === 'light') {
+        document.getElementById('theme-text').textContent = 'Light';
+        document.getElementById('theme-icon').textContent = '☀️';
+      }
+
+      if (!state.soundEnabled) {
+        document.getElementById('sound-text').textContent = 'Sound OFF';
+        document.getElementById('sound-icon').textContent = '🔇';
+      }
+
+      // Inspirational quote
+      const quoteEl = document.getElementById('daily-quote-box');
+      quoteEl.textContent = INSPIRATIONAL_QUOTES[Math.floor(Math.random() * INSPIRATIONAL_QUOTES.length)];
+
+      // Initial Render
+      renderAll();
+
+      // Window resize debounced listener to redraw Donut Chart & Confetti
+      let resizeTimer = null;
+      window.addEventListener('resize', () => {
+        clearTimeout(resizeTimer);
+        resizeTimer = setTimeout(() => {
+          resizeCanvas();
+          renderStatisticsDashboard();
+        }, 120);
+      }, { passive: true });
+
+      window.addEventListener('orientationchange', () => {
+        setTimeout(() => {
+          resizeCanvas();
+          renderStatisticsDashboard();
+        }, 150);
+      }, { passive: true });
+
+      // Dismiss tooltips on touch outside
+      window.addEventListener('touchstart', (e) => {
+        if (!e.target.closest('.day-cell') && !e.target.closest('.github-cell')) {
+          hideTooltip();
+        }
+      }, { passive: true });
+
+      // Navigation Buttons
+      document.getElementById('btn-prev-month').addEventListener('click', () => {
+        state.viewMonth--;
+        if (state.viewMonth < 0) {
+          state.viewMonth = 11;
+          state.viewYear--;
+        }
+        renderAll();
+      });
+
+      document.getElementById('btn-next-month').addEventListener('click', () => {
+        state.viewMonth++;
+        if (state.viewMonth > 11) {
+          state.viewMonth = 0;
+          state.viewYear++;
+        }
+        renderAll();
+      });
+
+      document.getElementById('btn-prev-year').addEventListener('click', () => {
+        state.viewYear--;
+        renderYearHeatmap();
+        renderStatisticsDashboard();
+      });
+
+      document.getElementById('btn-next-year').addEventListener('click', () => {
+        state.viewYear++;
+        renderYearHeatmap();
+        renderStatisticsDashboard();
+      });
+
+      document.getElementById('btn-today').addEventListener('click', () => {
+        const now = new Date();
+        state.viewYear = now.getFullYear();
+        state.viewMonth = now.getMonth();
+        state.selectedDateStr = formatDateKey(now);
+        renderAll();
+        showToast('🎯 Jumped to today');
+      });
+
+      document.getElementById('btn-clear-month').addEventListener('click', clearMonthEntries);
+
+      // Header Global Actions
+      document.getElementById('btn-toggle-theme').addEventListener('click', toggleTheme);
+      document.getElementById('btn-toggle-sound').addEventListener('click', toggleSound);
+      document.getElementById('btn-demo-data').addEventListener('click', populateDemoData);
+
+      // Quick Export / Import
+      document.getElementById('btn-quick-export').addEventListener('click', exportJSON);
+      document.getElementById('quick-import-file').addEventListener('change', (e) => {
+        if (e.target.files && e.target.files[0]) {
+          importJSONFile(e.target.files[0]);
+        }
+      });
+
+      // Data Modal
+      document.getElementById('btn-data-menu').addEventListener('click', openDataModal);
+      document.getElementById('btn-close-data-modal').addEventListener('click', closeDataModal);
+      document.getElementById('btn-export-json').addEventListener('click', exportJSON);
+      document.getElementById('btn-export-csv').addEventListener('click', exportCSV);
+      document.getElementById('btn-reset-all').addEventListener('click', resetAllData);
+      document.getElementById('import-file-input').addEventListener('change', (e) => {
+        if (e.target.files && e.target.files[0]) {
+          importJSONFile(e.target.files[0]);
+        }
+      });
+      document.getElementById('data-modal').addEventListener('click', (e) => {
+        if (e.target.id === 'data-modal') closeDataModal();
+      });
+
+      // Mood Notes Modal Listeners
+      document.getElementById('btn-close-note-modal').addEventListener('click', closeMoodNoteModal);
+      document.getElementById('btn-modal-cancel').addEventListener('click', closeMoodNoteModal);
+      document.getElementById('btn-modal-save').addEventListener('click', saveModalNote);
+      document.getElementById('btn-modal-clear-day').addEventListener('click', clearModalDay);
+      document.getElementById('mood-notes-modal').addEventListener('click', (e) => {
+        if (e.target.id === 'mood-notes-modal') closeMoodNoteModal();
+      });
+
+      // Modal Mood Pill Selectors
+      document.querySelectorAll('.modal-mood-btn').forEach(btn => {
+        btn.addEventListener('click', (e) => {
+          const level = parseInt(btn.dataset.level, 10);
+          state.modalWorkingMood = level;
+          renderModalMoodPills();
+          playMoodSound(level);
+          if (level === 1) {
+            const coords = getEventCoordinates(e);
+            triggerConfettiBurst(coords.x, coords.y);
+          }
+        });
+      });
+
+      // Modal Tags Toggle
+      document.getElementById('modal-tag-chips-wrap').addEventListener('click', (e) => {
+        const chip = e.target.closest('.tag-chip');
+        if (!chip) return;
+        const tag = chip.dataset.tag;
+        const idx = state.modalWorkingTags.indexOf(tag);
+        if (idx > -1) state.modalWorkingTags.splice(idx, 1);
+        else state.modalWorkingTags.push(tag);
+        renderModalTags();
+      });
+
+      // Modal Character Counter
+      document.getElementById('modal-note-textarea').addEventListener('input', (e) => {
+        document.getElementById('modal-char-counter').textContent = `${e.target.value.length} / 280`;
+      });
+
+      // Sidebar Quick Mood Set Pills
+      document.querySelectorAll('.mood-btn-pill').forEach(btn => {
+        btn.addEventListener('click', (e) => {
+          const level = parseInt(btn.dataset.level, 10);
+          setDayMood(state.selectedDateStr, level);
+          playMoodSound(level);
+          if (level === 1) {
+            const coords = getEventCoordinates(e);
+            triggerConfettiBurst(coords.x, coords.y);
+          }
+        });
+      });
+
+      // Sidebar Reflection Save
+      document.getElementById('btn-save-note').addEventListener('click', () => {
+        const noteText = document.getElementById('journal-note-input').value;
+        if (!state.entries[state.selectedDateStr]) {
+          state.entries[state.selectedDateStr] = { mood: 0, note: '', tags: [] };
+        }
+        state.entries[state.selectedDateStr].note = noteText;
+        state.entries[state.selectedDateStr].updatedAt = new Date().toISOString();
+        saveState();
+        renderAll();
+        showToast('💾 Reflection saved successfully!');
+      });
+
+      // Sidebar Live Note Typing Auto-Save
+      document.getElementById('journal-note-input').addEventListener('input', (e) => {
+        if (!state.entries[state.selectedDateStr]) {
+          state.entries[state.selectedDateStr] = { mood: 0, note: '', tags: [] };
+        }
+        state.entries[state.selectedDateStr].note = e.target.value;
+        state.entries[state.selectedDateStr].updatedAt = new Date().toISOString();
+        saveState();
+
+        const activeCell = document.querySelector(`.day-cell[data-date="${state.selectedDateStr}"]`);
+        if (activeCell) {
+          activeCell.classList.toggle('has-note', Boolean(e.target.value.trim()));
+        }
+      });
+
+      // Sidebar Clear Selected Day
+      document.getElementById('btn-clear-day').addEventListener('click', () => {
+        delete state.entries[state.selectedDateStr];
+        saveState();
+        renderAll();
+        showToast('🗑️ Cleared day entry');
+      });
+
+      // Sidebar Tag Toggle
+      document.getElementById('tag-chips-wrap').addEventListener('click', (e) => {
+        const chip = e.target.closest('.tag-chip');
+        if (!chip) return;
+        const tag = chip.dataset.tag;
+
+        if (!state.entries[state.selectedDateStr]) {
+          state.entries[state.selectedDateStr] = { mood: 0, note: '', tags: [] };
+        }
+        if (!state.entries[state.selectedDateStr].tags) {
+          state.entries[state.selectedDateStr].tags = [];
+        }
+
+        const tagsList = state.entries[state.selectedDateStr].tags;
+        const tagIdx = tagsList.indexOf(tag);
+        if (tagIdx > -1) tagsList.splice(tagIdx, 1);
+        else tagsList.push(tag);
+
+        saveState();
+        renderDayInspector(state.selectedDateStr);
+      });
+
+      // Global Keyboard Shortcuts
+      window.addEventListener('keydown', (e) => {
+        if (['INPUT', 'TEXTAREA'].includes(document.activeElement.tagName)) {
+          if (e.key === 'Escape') {
+            closeMoodNoteModal();
+            closeDataModal();
+          }
+          if ((e.ctrlKey || e.metaKey) && e.key === 'Enter') {
+            if (document.getElementById('mood-notes-modal').classList.contains('open')) {
+              saveModalNote();
+            }
+          }
+          return;
+        }
+
+        if (e.key === 'Escape') {
+          closeMoodNoteModal();
+          closeDataModal();
+        } else if (e.key === 'ArrowLeft') {
+          document.getElementById('btn-prev-month').click();
+        } else if (e.key === 'ArrowRight') {
+          document.getElementById('btn-next-month').click();
+        } else if (e.key === 't' || e.key === 'T') {
+          document.getElementById('btn-today').click();
+        }
+      });
+    });
+  </script>
+</body>
+</html>
